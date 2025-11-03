@@ -14,6 +14,11 @@ final class AppConst {
 }
 
 public class ClientRunner extends Application {
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+
     public void start(Stage stage) throws Exception {
         Scene scene = new Scene(
                 new FXMLLoader(getClass().getResource("/com/fahchouch/client/login/login.fxml")).load());
@@ -23,9 +28,5 @@ public class ClientRunner extends Application {
                 new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/fahchouch/client/icon.png"))));
         stage.setScene(scene);
         stage.show();
-    }
-
-    public static void main(String[] args) {
-        launch(args);
     }
 }

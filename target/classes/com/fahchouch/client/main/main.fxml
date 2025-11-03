@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane prefHeight="500.0" prefWidth="700.0" style="-fx-background-color: #1e1e2f;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.fahchouch.client.controllers.main.MainPageController">
+
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-padding: 10;">
+            <Label style="-fx-text-fill: white; -fx-font-size: 28; -fx-font-weight: bold;" text="Chat Lobby">
+                <font>
+                    <Font name="Roboto" size="20.0" />
+                </font>
+            </Label>
+            
+            <Region HBox.hgrow="ALWAYS" />
+         <Label text="Chercher un utilisateur :" textFill="WHITE">
+            <font>
+               <Font name="Roboto" size="12.0" />
+            </font>
+         </Label>
+            
+            <TextField fx:id="searchField" maxWidth="250" promptText="Search user or room..." style="-fx-background-radius: 8; -fx-padding: 8; -fx-font-size: 14;" />
+        </HBox>
+    </top>
+
+    <center>
+        <VBox alignment="TOP_CENTER" spacing="15" style="-fx-padding: 20;">
+            <ListView fx:id="usersListView" prefHeight="400" style="-fx-background-radius: 8; -fx-font-size: 14;" />
+        </VBox>
+    </center>
+
+</BorderPane>

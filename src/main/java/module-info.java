@@ -3,8 +3,10 @@ module com.fahchouch {
     requires javafx.fxml;
 
     opens com.fahchouch.client to javafx.graphics, javafx.fxml;
-    opens com.fahchouch.client.login to javafx.graphics, javafx.fxml;
+    opens com.fahchouch.client.controllers.login to javafx.graphics, javafx.fxml;
+    opens com.fahchouch.client.controllers.main to javafx.graphics, javafx.fxml;
 
     exports com.fahchouch.client;
-    exports com.fahchouch.client.login;
+    exports com.fahchouch.client.controllers.login;
+    exports com.fahchouch.client.controllers.main;
 }

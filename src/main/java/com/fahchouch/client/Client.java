@@ -46,4 +46,11 @@ public class Client {
     public String getUsername() {
         return username;
     }
+
+    public static boolean isUsernameValid(String username) {
+        if (username == null || username.isEmpty() || username.length() < 3)
+            return false;
+        return !Character.isDigit(username.charAt(0));
+    }
+
 }
