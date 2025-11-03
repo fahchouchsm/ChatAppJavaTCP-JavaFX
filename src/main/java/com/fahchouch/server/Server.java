@@ -23,7 +23,7 @@ public class Server {
             while (true) {
                 Socket s = ss.accept();
                 ClientServer c = new ClientServer(s);
-                new ClientHandler(c, this).run();
+                new ClientHandler(c, this).start();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -43,6 +43,10 @@ public class Server {
 
     public void addClient(ClientServer c) {
         clients.add(c);
+    }
+
+    public void removeClient(ClientServer c) {
+        clients.remove(c);
     }
 
     public void showClients() {

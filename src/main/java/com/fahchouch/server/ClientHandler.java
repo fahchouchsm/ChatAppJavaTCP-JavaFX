@@ -3,42 +3,58 @@ package com.fahchouch.server;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.SocketException;
 
 public class ClientHandler extends Thread {
-    private ClientServer c;
+    private ClientServer client;
     private BufferedReader in;
     private PrintWriter out;
     private Server server;
 
-    public ClientHandler(ClientServer c, Server server) {
+    public ClientHandler(ClientServer client, Server server) {
         try {
-            this.c = c;
+            this.client = client;
             this.server = server;
-            in = new BufferedReader(new InputStreamReader(c.getSocket().getInputStream()));
-            out = new PrintWriter(c.getSocket().getOutputStream());
+            in = new BufferedReader(new InputStreamReader(this.client.getSocket().getInputStream()));
+            out = new PrintWriter(this.client.getSocket().getOutputStream());
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     public void run() {
-        while (true) {
-            try {
+        try {
+            String usernamereq;
+            while ((usernamereq = in.readLine()) != null) {
                 System.out.println("waiting for the client username");
-                String usernamereq = in.readLine();
                 if (server.findClientByUsername(usernamereq) == null) {
-                    c.setUsername(usernamereq);
-                    server.addClient(c);
+                    client.setUsername(usernamereq);
+                    server.addClient(client);
                     out.println(1);
                     out.flush();
                     server.showClients();
                 } else {
-                    out.print(0);
+                    out.println(0);
+                    out.flush();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
 
+            System.out.println("client disconnected: " + client.getUsername());
+
+        } catch (Exception e) {
+            System.out.println("Error with client " + client.getUsername() + ": " + e.getMessage());
+        } finally {
+            cleanUp();
+        }
+    }
+
+    public void cleanUp() {
+        try {
+            server.removeClient(client);
+            in.close();
+            out.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
