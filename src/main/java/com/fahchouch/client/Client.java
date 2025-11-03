@@ -1,9 +1,12 @@
 package com.fahchouch.client;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+
+import com.fahchouch.client.fx.FxEventHandler;
 
 public class Client {
     private Socket s;
@@ -13,7 +16,7 @@ public class Client {
 
     public Client() {
         try {
-            s = new Socket("localhost", 3000);
+            s = new Socket("localhost", 3001);
             in = new BufferedReader(new InputStreamReader(s.getInputStream()));
             out = new PrintWriter(s.getOutputStream(), true);
         } catch (java.io.IOException e) {
@@ -21,8 +24,19 @@ public class Client {
         }
     }
 
-    public void sendRecString(String msg) {
-        out.println(msg);
+    public String sendRecString(String msg) {
+        try {
+            out.println(msg);
+            out.flush();
+            String res = in.readLine();
+            return res;
+        } catch (IOException e) {
+            FxEventHandler.showAlert("Impossible de se connecter au serveur");
+            return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public Socket getSocket() {

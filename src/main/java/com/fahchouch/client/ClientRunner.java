@@ -15,7 +15,8 @@ final class AppConst {
 
 public class ClientRunner extends Application {
     public void start(Stage stage) throws Exception {
-        Scene scene = new Scene(new FXMLLoader(getClass().getResource("/com/fahchouch/client/login.fxml")).load());
+        Scene scene = new Scene(
+                new FXMLLoader(getClass().getResource("/com/fahchouch/client/login/login.fxml")).load());
         stage.setResizable(false);
         stage.titleProperty().set(AppConst.APP_NAME + " - Login");
         stage.getIcons().add(
