@@ -1,4 +1,4 @@
-package com.fahchouch.server.Room;
+package com.fahchouch.shared;
 
 import java.io.Serializable;
 
@@ -12,8 +12,7 @@ public class Packet implements Serializable {
     }
 
     public Packet(String name) {
-        this.name = name;
-        this.content = null;
+        this(name, null);
     }
 
     public String getName() {

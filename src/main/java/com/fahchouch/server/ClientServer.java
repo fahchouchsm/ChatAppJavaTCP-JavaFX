@@ -1,36 +1,25 @@
 package com.fahchouch.server;
 
 import java.net.Socket;
+import com.fahchouch.shared.SimpleClient;
 
-public class ClientServer {
-    private String username = null;
-    private Socket s;
+public class ClientServer extends SimpleClient {
+    private Socket socket;
     private static int nbrClients = 0;
-    private int id;
 
-    public ClientServer(String username, Socket s) {
-        this.s = s;
-        this.username = username;
-        this.id = nbrClients;
+    public ClientServer(Socket socket) {
+        super(null, nbrClients);
+        this.socket = socket;
         nbrClients++;
     }
 
-    public ClientServer(Socket s) {
-        this.s = s;
-        this.id = nbrClients;
+    public ClientServer(String username, Socket socket) {
+        super(username, nbrClients);
+        this.socket = socket;
         nbrClients++;
     }
 
     public Socket getSocket() {
-        return s;
+        return socket;
     }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
 }

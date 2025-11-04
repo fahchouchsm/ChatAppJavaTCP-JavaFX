@@ -1,23 +1,26 @@
 package com.fahchouch.client;
 
-import java.io.*;
+import com.fahchouch.shared.Packet;
+import com.fahchouch.shared.SimpleClient;
+import com.fahchouch.client.fx.FxEventHandler;
+
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-import com.fahchouch.client.fx.FxEventHandler;
-import com.fahchouch.server.Room.Packet;
-
-public class Client {
-    private Socket s;
-    private String username;
+public class Client extends SimpleClient {
+    private Socket socket;
     private ObjectOutputStream objOut;
     private ObjectInputStream objIn;
 
     public Client() {
+        super(null, 0);
         try {
-            s = new Socket("localhost", 3001);
-            objOut = new ObjectOutputStream(s.getOutputStream());
-            objIn = new ObjectInputStream(s.getInputStream());
-        } catch (IOException e) {
+            socket = new Socket("localhost", 3001);
+            objOut = new ObjectOutputStream(socket.getOutputStream());
+            objOut.flush();
+            objIn = new ObjectInputStream(socket.getInputStream());
+        } catch (Exception e) {
             e.printStackTrace();
             FxEventHandler.showAlert("Impossible de se connecter au serveur");
         }
@@ -49,15 +52,17 @@ public class Client {
     }
 
     public Socket getSocket() {
-        return s;
+        return socket;
     }
 
+    @Override
     public String getUsername() {
-        return username;
+        return super.getUsername();
     }
 
+    @Override
     public void setUsername(String username) {
-        this.username = username;
+        super.setUsername(username);
     }
 
     public static boolean isUsernameValid(String username) {
@@ -65,5 +70,4 @@ public class Client {
             return false;
         return !Character.isDigit(username.charAt(0));
     }
-
 }

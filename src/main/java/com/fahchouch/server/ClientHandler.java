@@ -1,6 +1,6 @@
 package com.fahchouch.server;
 
-import com.fahchouch.server.Room.Packet;
+import com.fahchouch.shared.Packet;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
@@ -15,6 +15,7 @@ public class ClientHandler extends Thread {
             this.client = client;
             this.server = server;
             objOut = new ObjectOutputStream(this.client.getSocket().getOutputStream());
+            objOut.flush();
             objIn = new ObjectInputStream(this.client.getSocket().getInputStream());
         } catch (Exception e) {
             e.printStackTrace();
@@ -26,7 +27,6 @@ public class ClientHandler extends Thread {
             while (true) {
                 Packet packet = (Packet) objIn.readObject();
                 String username = packet.getName();
-                System.out.println("Login attempt: " + username);
 
                 Packet response;
                 if (server.findClientByUsername(username) == null) {

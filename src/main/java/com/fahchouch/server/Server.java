@@ -50,6 +50,7 @@ public class Server {
     }
 
     public void showClients() {
+        System.out.println("-------------------");
         System.out.println("Available Clients :");
         for (ClientServer client : clients) {
             System.out.println(client.getUsername());
