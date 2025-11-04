@@ -6,13 +6,35 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.fahchouch.server.Room.ChatRoom;
+import com.fahchouch.shared.SimpleClient;
+
 public class Server {
     private int port;
     private final List<ClientServer> clients = Collections.synchronizedList(new ArrayList<>());
     private int idCounter = 0;
+    private final List<ChatRoom> chatRooms = Collections.synchronizedList(new ArrayList<>());
 
     public static void main(String[] args) {
         new Server(3001).runServer();
+    }
+
+    public ChatRoom getOrCreatePrivateRoom(ClientServer a, ClientServer b) {
+        String roomName = a.getUsername() + "_" + b.getUsername();
+
+        synchronized (chatRooms) {
+            for (ChatRoom room : chatRooms) {
+                if (room.getName().equals(roomName) || room.getName().equals(b.getUsername() + "_" + a.getUsername())) {
+                    return room;
+                }
+            }
+
+            ChatRoom newRoom = new ChatRoom(roomName);
+            newRoom.addParticipant(a);
+            newRoom.addParticipant(b);
+            chatRooms.add(newRoom);
+            return newRoom;
+        }
     }
 
     public Server(int port) {
@@ -41,6 +63,25 @@ public class Server {
         synchronized (clients) {
             return clients.stream().filter(c -> username.equals(c.getUsername())).findFirst().orElse(null);
         }
+    }
+
+    public List<SimpleClient> searchClientsByUsername(String query) {
+        if (query == null || query.isEmpty())
+            return Collections.emptyList();
+
+        List<SimpleClient> result = new ArrayList<>();
+        String lowerQuery = query.toLowerCase();
+
+        synchronized (clients) {
+            for (ClientServer c : clients) {
+                String username = c.getUsername();
+                if (username != null && username.toLowerCase().contains(lowerQuery)) {
+                    result.add(new SimpleClient(username, c.getId()));
+                }
+            }
+        }
+
+        return result;
     }
 
     public void addClient(ClientServer client) {

@@ -46,7 +46,6 @@
             
             <Button fx:id="publicRoomButton" text="Rejoindre le salon public"
                     style="-fx-background-color: #43a047; -fx-text-fill: white; -fx-font-size: 16; -fx-background-radius: 10;" />
-            
             <ListView fx:id="usersListView" prefHeight="400" style="-fx-background-radius: 8; -fx-font-size: 14;"
                       visible="false" managed="false"/>
         </VBox>

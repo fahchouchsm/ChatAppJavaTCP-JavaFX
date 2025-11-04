@@ -1,7 +1,7 @@
 package com.fahchouch.server;
 
+import com.fahchouch.server.Room.ChatRoom;
 import com.fahchouch.shared.Packet;
-import com.fahchouch.shared.SimpleClient;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -56,20 +56,17 @@ public class ClientHandler extends Thread {
                 Packet packet = (Packet) objIn.readObject();
                 if (packet == null)
                     continue;
-
+                System.out.println(packet.getName());
                 switch (packet.getName()) {
                     case "searchClient":
-                        ArrayList<SimpleClient> clientsList = new ArrayList<>();
-                        server.getClientsSnapshot().forEach(c -> clientsList.add(
-                                new SimpleClient(c.getUsername(), c.getId())));
-                        Packet result = new Packet("searchResult", clientsList);
+                        String query = packet.getContent();
+                        var clientsFound = server.searchClientsByUsername(query);
+                        Packet result = new Packet("searchResult", new ArrayList<>(clientsFound));
                         objOut.writeObject(result);
                         objOut.flush();
                         break;
-                    default:
-                        objOut.writeObject(new Packet("error", "Unknown action"));
-                        objOut.flush();
                 }
+
             }
 
         } catch (Exception e) {
