@@ -29,18 +29,19 @@ public class LoginPageController {
     private void handleConnect() {
         String username = usernameField.getText().trim();
         if (username.isEmpty() || !Client.isUsernameValid(username)) {
-            FxEventHandler.showAlert("Veuillez entrer un nom d'utilisateur valid.");
+            FxEventHandler.showAlert("Veuillez entrer un nom d'utilisateur valide.");
             return;
         }
 
         Client client = new Client();
-        int res = Integer.parseInt(client.sendRecString(username));
-        System.out.println(res);
+        int res = client.login(username);
+        System.out.println("Login result: " + res);
 
         if (res == 1) {
+            client.setUsername(username);
             loadNextPage();
         } else {
-            FxEventHandler.showAlert("Le nom d'utilisateur est deja utiliser.");
+            FxEventHandler.showAlert("Le nom d'utilisateur est déjà utilisé.");
         }
     }
 
@@ -50,6 +51,7 @@ public class LoginPageController {
                     .load(getClass().getResource("/com/fahchouch/client/main/main.fxml"));
             javafx.scene.Scene scene = new javafx.scene.Scene(root);
             javafx.stage.Stage stage = (javafx.stage.Stage) connectButton.getScene().getWindow();
+            stage.setResizable(true);
             stage.setScene(scene);
             stage.show();
         } catch (Exception e) {

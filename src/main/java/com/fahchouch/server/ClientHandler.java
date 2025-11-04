@@ -1,21 +1,21 @@
 package com.fahchouch.server;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import com.fahchouch.server.Room.Packet;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 public class ClientHandler extends Thread {
     private ClientServer client;
-    private BufferedReader in;
-    private PrintWriter out;
     private Server server;
+    private ObjectInputStream objIn;
+    private ObjectOutputStream objOut;
 
     public ClientHandler(ClientServer client, Server server) {
         try {
             this.client = client;
             this.server = server;
-            in = new BufferedReader(new InputStreamReader(this.client.getSocket().getInputStream()));
-            out = new PrintWriter(this.client.getSocket().getOutputStream());
+            objOut = new ObjectOutputStream(this.client.getSocket().getOutputStream());
+            objIn = new ObjectInputStream(this.client.getSocket().getInputStream());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -23,37 +23,27 @@ public class ClientHandler extends Thread {
 
     public void run() {
         try {
-            String usernamereq;
-            while ((usernamereq = in.readLine()) != null) {
-                System.out.println("waiting for the client username");
-                if (server.findClientByUsername(usernamereq) == null) {
-                    client.setUsername(usernamereq);
+            while (true) {
+                Packet packet = (Packet) objIn.readObject();
+                String username = packet.getName();
+                System.out.println("Login attempt: " + username);
+
+                Packet response;
+                if (server.findClientByUsername(username) == null) {
+                    client.setUsername(username);
                     server.addClient(client);
-                    out.println(1);
-                    out.flush();
                     server.showClients();
+                    response = new Packet("response", "1");
                 } else {
-                    out.println(0);
-                    out.flush();
+                    response = new Packet("response", "0");
                 }
+
+                objOut.writeObject(response);
+                objOut.flush();
             }
-
-            System.out.println("client disconnected: " + client.getUsername());
-
         } catch (Exception e) {
-            System.out.println("Error with client " + client.getUsername() + ": " + e.getMessage());
-        } finally {
-            cleanUp();
-        }
-    }
-
-    public void cleanUp() {
-        try {
+            System.out.println("Client " + client.getUsername() + " disconnected.");
             server.removeClient(client);
-            in.close();
-            out.close();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 }
