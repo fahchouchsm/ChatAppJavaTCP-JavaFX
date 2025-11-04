@@ -1,7 +1,10 @@
 package com.fahchouch.client.controllers.main;
 
+import java.util.ArrayList;
+
 import com.fahchouch.client.Client;
 import com.fahchouch.shared.Packet;
+import com.fahchouch.shared.SimpleClient;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -47,7 +50,11 @@ public class MainPageController {
                 name = "searchClient";
             }
             Packet packet = new Packet(name, query);
-            client.sendObject(packet);
+            @SuppressWarnings("unchecked")
+            ArrayList<SimpleClient> clients = (ArrayList<SimpleClient>) client.sendObject(packet);
+            for (SimpleClient simpleClient : clients) {
+                System.out.println(simpleClient.getUsername());
+            }
             usersListView.setVisible(true);
             usersListView.setManaged(true);
         }

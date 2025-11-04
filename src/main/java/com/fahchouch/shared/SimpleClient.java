@@ -3,7 +3,6 @@ package com.fahchouch.shared;
 import java.io.Serializable;
 
 public class SimpleClient implements Serializable {
-    private static final long serialVersionUID = 1L;
     private String username;
     private int id;
 

@@ -8,8 +8,8 @@ import java.util.List;
 
 public class Server {
     private int port;
-
     private final List<ClientServer> clients = Collections.synchronizedList(new ArrayList<>());
+    private int idCounter = 0;
 
     public static void main(String[] args) {
         new Server(3001).runServer();
@@ -21,10 +21,9 @@ public class Server {
 
     public void runServer() {
         try (ServerSocket ss = new ServerSocket(port)) {
-            System.out.println("server running on port : " + ss.getLocalPort());
+            System.out.println("Server running on port " + port);
             while (true) {
                 Socket s = ss.accept();
-
                 new ClientHandler(s, this).start();
             }
         } catch (Exception e) {
@@ -32,34 +31,36 @@ public class Server {
         }
     }
 
+    public synchronized int getNextId() {
+        return idCounter++;
+    }
+
     public ClientServer findClientByUsername(String username) {
         if (username == null)
             return null;
         synchronized (clients) {
-            for (ClientServer client : clients) {
-                if (username.equals(client.getUsername())) {
-                    return client;
-                }
-            }
+            return clients.stream().filter(c -> username.equals(c.getUsername())).findFirst().orElse(null);
         }
-        return null;
     }
 
-    public void addClient(ClientServer c) {
-        clients.add(c);
+    public void addClient(ClientServer client) {
+        clients.add(client);
     }
 
-    public void removeClient(ClientServer c) {
-        clients.remove(c);
+    public void removeClient(ClientServer client) {
+        clients.remove(client);
+    }
+
+    public List<ClientServer> getClientsSnapshot() {
+        synchronized (clients) {
+            return new ArrayList<>(clients);
+        }
     }
 
     public void showClients() {
-        System.out.println("-------------------");
-        System.out.println("Available Clients :");
+        System.out.println("Clients connected:");
         synchronized (clients) {
-            for (ClientServer client : clients) {
-                System.out.println(client.getUsername());
-            }
+            clients.forEach(c -> System.out.println(c.getUsername()));
         }
     }
 }

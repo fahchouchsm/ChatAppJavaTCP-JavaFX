@@ -1,19 +1,13 @@
 package com.fahchouch.server;
 
-import java.net.Socket;
 import com.fahchouch.shared.SimpleClient;
+import java.net.Socket;
 
 public class ClientServer extends SimpleClient {
-    private transient Socket socket;
-    private static int nbrClients = 0;
+    private Socket socket;
 
-    public ClientServer(Socket socket) {
-        super(null, nbrClients++);
-        this.socket = socket;
-    }
-
-    public ClientServer(String username, Socket socket) {
-        super(username, nbrClients++);
+    public ClientServer(String username, int id, Socket socket) {
+        super(username, id);
         this.socket = socket;
     }
 

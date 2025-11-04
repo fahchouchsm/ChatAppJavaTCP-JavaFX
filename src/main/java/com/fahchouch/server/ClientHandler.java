@@ -1,10 +1,12 @@
 package com.fahchouch.server;
 
 import com.fahchouch.shared.Packet;
+import com.fahchouch.shared.SimpleClient;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class ClientHandler extends Thread {
     private Socket socket;
@@ -21,87 +23,64 @@ public class ClientHandler extends Thread {
     @Override
     public void run() {
         try {
-
-            objIn = new ObjectInputStream(socket.getInputStream());
-
             objOut = new ObjectOutputStream(socket.getOutputStream());
             objOut.flush();
+            objIn = new ObjectInputStream(socket.getInputStream());
 
+            // Login
             Packet loginPacket = (Packet) objIn.readObject();
-            String username = loginPacket != null ? loginPacket.getName() : null;
+            String username = loginPacket.getName();
             System.out.println("Login attempt: " + username);
 
             Packet response;
-            if (username == null || username.trim().isEmpty()) {
-                response = new Packet("response", "0");
-                objOut.writeObject(response);
-                objOut.flush();
-                closeSocket();
-                return;
-            }
-
             synchronized (server) {
-            }
-            if (server.findClientByUsername(username) == null) {
-
-                client = new ClientServer(username, socket);
-                server.addClient(client);
-                server.showClients();
-                response = new Packet("response", "1");
-            } else {
-                response = new Packet("response", "0");
+                if (server.findClientByUsername(username) == null) {
+                    client = new ClientServer(username, server.getNextId(), socket);
+                    server.addClient(client);
+                    response = new Packet("response", "1");
+                    server.showClients();
+                } else {
+                    response = new Packet("response", "0");
+                }
             }
             objOut.writeObject(response);
             objOut.flush();
-            if (!"1".equals(response.getContent())) {
 
-                closeSocket();
+            if ("0".equals(response.getContent())) {
+                closeConnection();
                 return;
             }
+
+            // Handle requests
             while (true) {
                 Packet packet = (Packet) objIn.readObject();
                 if (packet == null)
-                    break;
-                String action = packet.getName();
-                String content = packet.getContent();
+                    continue;
 
-                switch (action) {
+                switch (packet.getName()) {
                     case "searchClient":
-
-                        Packet result = new Packet("searchResult", "ok");
+                        ArrayList<SimpleClient> clientsList = new ArrayList<>();
+                        server.getClientsSnapshot().forEach(c -> clientsList.add(
+                                new SimpleClient(c.getUsername(), c.getId())));
+                        Packet result = new Packet("searchResult", clientsList);
                         objOut.writeObject(result);
                         objOut.flush();
                         break;
-
-                    case "ping":
-                        objOut.writeObject(new Packet("pong", "alive"));
-                        objOut.flush();
-                        break;
-
                     default:
-
-                        objOut.writeObject(new Packet("error", "unknown action: " + action));
+                        objOut.writeObject(new Packet("error", "Unknown action"));
                         objOut.flush();
                 }
             }
 
         } catch (Exception e) {
-
-            String user = (client != null ? client.getUsername() : "unknown");
-            System.out.println("Client " + user + " disconnected.");
+            System.out.println("Client disconnected: " + (client != null ? client.getUsername() : "unknown"));
         } finally {
-
-            try {
-                if (client != null && client.getUsername() != null) {
-                    server.removeClient(client);
-                }
-                closeSocket();
-            } catch (Exception ignored) {
-            }
+            server.removeClient(client);
+            closeConnection();
         }
     }
 
-    private void closeSocket() {
+    private void closeConnection() {
         try {
             if (objIn != null)
                 objIn.close();
