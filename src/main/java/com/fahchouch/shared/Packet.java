@@ -3,8 +3,9 @@ package com.fahchouch.shared;
 import java.io.Serializable;
 
 public class Packet implements Serializable {
-    private String name;
-    private String content;
+    private static final long serialVersionUID = 1L;
+    private String name; // action / username
+    private String content; // payload or response code
 
     public Packet(String name, String content) {
         this.name = name;
@@ -21,5 +22,9 @@ public class Packet implements Serializable {
 
     public String getContent() {
         return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
     }
 }

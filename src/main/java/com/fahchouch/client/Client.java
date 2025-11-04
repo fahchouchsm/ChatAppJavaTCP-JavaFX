@@ -14,9 +14,11 @@ public class Client extends SimpleClient {
     private ObjectInputStream objIn;
 
     public Client() {
-        super(null, 0);
+        super(null, -1);
         try {
             socket = new Socket("localhost", 3001);
+            // Client creates ObjectOutputStream first (writes header), then
+            // ObjectInputStream
             objOut = new ObjectOutputStream(socket.getOutputStream());
             objOut.flush();
             objIn = new ObjectInputStream(socket.getInputStream());
@@ -26,6 +28,7 @@ public class Client extends SimpleClient {
         }
     }
 
+    // returns 1 on success, 0 fail
     public int login(String username) {
         try {
             Packet packet = new Packet(username);
@@ -33,13 +36,17 @@ public class Client extends SimpleClient {
             objOut.flush();
 
             Packet response = (Packet) objIn.readObject();
-            return Integer.parseInt(response.getContent());
+            if (response != null && response.getContent() != null) {
+                return Integer.parseInt(response.getContent());
+            }
+            return 0;
         } catch (Exception e) {
             e.printStackTrace();
             return 0;
         }
     }
 
+    // generic send/receive object (synchronous)
     public Object sendObject(Object obj) {
         try {
             objOut.writeObject(obj);
@@ -51,10 +58,6 @@ public class Client extends SimpleClient {
         }
     }
 
-    public Socket getSocket() {
-        return socket;
-    }
-
     @Override
     public String getUsername() {
         return super.getUsername();
@@ -63,6 +66,10 @@ public class Client extends SimpleClient {
     @Override
     public void setUsername(String username) {
         super.setUsername(username);
+    }
+
+    public Socket getSocket() {
+        return socket;
     }
 
     public static boolean isUsernameValid(String username) {

@@ -4,19 +4,17 @@ import java.net.Socket;
 import com.fahchouch.shared.SimpleClient;
 
 public class ClientServer extends SimpleClient {
-    private Socket socket;
+    private transient Socket socket;
     private static int nbrClients = 0;
 
     public ClientServer(Socket socket) {
-        super(null, nbrClients);
+        super(null, nbrClients++);
         this.socket = socket;
-        nbrClients++;
     }
 
     public ClientServer(String username, Socket socket) {
-        super(username, nbrClients);
+        super(username, nbrClients++);
         this.socket = socket;
-        nbrClients++;
     }
 
     public Socket getSocket() {
