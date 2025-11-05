@@ -5,9 +5,12 @@ import com.fahchouch.client.controllers.main.MainPageController;
 import com.fahchouch.client.fx.FxEventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.stage.Stage;
 
 public class LoginPageController {
 
@@ -40,13 +43,16 @@ public class LoginPageController {
             int res = client.login(username);
             if (res == 1) {
                 client.setUsername(username);
+                client.startListening();
 
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/fahchouch/client/main/main.fxml"));
-                javafx.scene.Parent root = loader.load();
+                Parent root = loader.load();
                 MainPageController m = loader.getController();
-                m.setClient(client);
-                javafx.scene.Scene scene = new javafx.scene.Scene(root);
-                javafx.stage.Stage stage = (javafx.stage.Stage) connectButton.getScene().getWindow();
+                m.setClient(client); // ← sets onRoomCreated
+                m.initAfterLogin();
+
+                Scene scene = new Scene(root);
+                Stage stage = (Stage) connectButton.getScene().getWindow();
                 stage.setScene(scene);
                 stage.show();
             } else {

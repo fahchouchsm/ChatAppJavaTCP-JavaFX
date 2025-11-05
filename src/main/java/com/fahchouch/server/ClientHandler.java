@@ -65,6 +65,7 @@ public class ClientHandler extends Thread {
                         objOut.writeObject(
                                 new Packet("getUserRoomsResult", server.getUserRoomsByUsername(packet.getContent())));
                         objOut.flush();
+                        break;
                     case "createPrivateRoom":
                         ClientServer other = server.findClientByUsername(query);
                         if (other != null && !other.equals(client)) {

@@ -1,6 +1,6 @@
 package com.fahchouch.client.controllers.main;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import com.fahchouch.client.Client;
 import com.fahchouch.client.ClientRunner;
@@ -44,11 +44,6 @@ public class MainPageController {
         loadUserRooms();
     }
 
-    public void setClient(Client client) {
-        this.client = client;
-
-    }
-
     @FXML
     public void initialize() {
 
@@ -77,23 +72,6 @@ public class MainPageController {
         logoutButton.setOnAction(e -> logout());
     }
 
-    private void loadUserRooms() {
-        if (client == null)
-            return;
-
-        client.sendObject(new Packet("getUserRooms", client.getUsername()));
-        Packet res = (Packet) client.receiveObject();
-
-        if (res == null || res.getArrlist() == null || res.getArrlist().isEmpty()) {
-            roomsListView.setItems(FXCollections.observableArrayList("Aucun salon"));
-        } else {
-            @SuppressWarnings("unchecked")
-            ArrayList<String> rooms = (ArrayList<String>) res.getArrlist();
-            ObservableList<String> roomNames = FXCollections.observableArrayList(rooms);
-            roomsListView.setItems(roomNames);
-        }
-    }
-
     private void searchUserOrRoom() {
         String query = searchField.getText().trim();
         if (query.isEmpty())
@@ -101,23 +79,48 @@ public class MainPageController {
 
         String name = Character.isDigit(query.charAt(0)) ? "searchRoom" : "searchClient";
         client.sendObject(new Packet(name, query));
-        Packet res = (Packet) client.receiveObject();
+        // NO receiveObject() — result comes via listener
+    }
 
-        if (res == null || res.getArrlist() == null || res.getArrlist().isEmpty()) {
+    public void setClient(Client client) {
+        this.client = client;
+
+        // REAL-TIME CALLBACKS
+        client.setOnRoomCreated(this::loadUserRooms);
+        client.setOnSearchResult(this::updateUsersList);
+        client.setOnGetUserRoomsResult(this::updateRoomsList);
+    }
+
+    private void updateUsersList(List<SimpleClient> clients) {
+        if (clients.isEmpty()) {
             usersListView.setItems(FXCollections.observableArrayList("Aucun résultat"));
         } else {
-            @SuppressWarnings("unchecked")
-            ArrayList<SimpleClient> clientsRes = (ArrayList<SimpleClient>) res.getArrlist();
             ObservableList<String> usernames = FXCollections.observableArrayList();
-            for (SimpleClient sc : clientsRes) {
+            for (SimpleClient sc : clients) {
                 usernames.add(sc.getUsername());
             }
             usersListView.setItems(usernames);
         }
     }
 
+    private void updateRoomsList(List<String> rooms) {
+        if (rooms.isEmpty()) {
+            roomsListView.setItems(FXCollections.observableArrayList("Aucun salon"));
+        } else {
+            roomsListView.setItems(FXCollections.observableArrayList(rooms));
+        }
+    }
+
+    private void loadUserRooms() {
+        if (client == null)
+            return;
+        client.sendObject(new Packet("getUserRooms", client.getUsername()));
+        // NO receiveObject()
+    }
+
     private void openChat(String username) {
         try {
+
             client.sendObject(new Packet("createPrivateRoom", username));
 
             FXMLLoader loader = new FXMLLoader(ClientRunner.class.getResource("/com/fahchouch/client/chat/chat.fxml"));
