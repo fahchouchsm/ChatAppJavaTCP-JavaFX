@@ -15,40 +15,37 @@
             xmlns="http://javafx.com/javafx/25"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.fahchouch.client.controllers.main.MainPageController">
-
+    
     <top>
-        <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-padding: 10;">
-            <Label text="Lobby de Chat"
-                   style="-fx-text-fill: white; -fx-font-size: 28; -fx-font-weight: bold;">
-                <font>
-                    <Font name="Roboto" size="20.0" />
-                </font>
-            </Label>
-            
-            <Region HBox.hgrow="ALWAYS" />
-            
-            <Label text="Chercher un utilisateur :" textFill="WHITE">
-                <font>
-                    <Font name="Roboto" size="12.0" />
-                </font>
-            </Label>
-            
-            <TextField fx:id="searchField" maxWidth="250" promptText="Rechercher..." 
-                       style="-fx-background-radius: 8; -fx-padding: 8; -fx-font-size: 14;" />
-            
-            <Button fx:id="searchButton" text="Chercher"
-                    style="-fx-background-color: #5c6bc0; -fx-text-fill: white; -fx-background-radius: 8;" />
+        <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-padding: 15;">
+            <Label fx:id="usernameLabel" text="Username" style="-fx-text-fill: white; -fx-font-size: 20; -fx-font-weight: bold;" />
+            <Region HBox.hgrow="ALWAYS"/>
         </HBox>
     </top>
-
+    
     <center>
-        <VBox alignment="TOP_CENTER" spacing="15" style="-fx-padding: 20;">
+        <HBox spacing="20" style="-fx-padding: 15;">
+            <VBox spacing="10" style="-fx-background-color: #2e2e4a; -fx-padding: 10; -fx-background-radius: 10;" HBox.hgrow="ALWAYS">
+                <Label text="Vos Salons" style="-fx-text-fill: white; -fx-font-size: 16; -fx-font-weight: bold;" />
+                <ListView fx:id="roomsListView" style="-fx-background-radius: 8; -fx-font-size: 14;" VBox.vgrow="ALWAYS"/>
+                <Button fx:id="publicRoomButton" text="Rejoindre le salon public" style="-fx-background-color: #43a047; -fx-text-fill: white; -fx-background-radius: 8;" />
+            </VBox>
             
-            <Button fx:id="publicRoomButton" text="Rejoindre le salon public"
-                    style="-fx-background-color: #43a047; -fx-text-fill: white; -fx-font-size: 16; -fx-background-radius: 10;" />
-            <ListView fx:id="usersListView" prefHeight="400" style="-fx-background-radius: 8; -fx-font-size: 14;"
-                      visible="false" managed="false"/>
-        </VBox>
+            <VBox spacing="10" style="-fx-background-color: #2e2e4a; -fx-padding: 10; -fx-background-radius: 10;" HBox.hgrow="ALWAYS">
+                <Label text="Chercher un utilisateur" style="-fx-text-fill: white; -fx-font-size: 16; -fx-font-weight: bold;" />
+                <HBox spacing="10">
+                    <TextField fx:id="searchField" promptText="Rechercher..." style="-fx-background-radius: 8; -fx-padding: 6; -fx-font-size: 14;" HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="searchButton" text="Chercher" style="-fx-background-color: #5c6bc0; -fx-text-fill: white; -fx-background-radius: 8;" />
+                </HBox>
+                <ListView fx:id="usersListView" style="-fx-background-radius: 8; -fx-font-size: 14;" VBox.vgrow="ALWAYS"/>
+            </VBox>
+        </HBox>
     </center>
+    
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" style="-fx-padding: 10;">
+            <Button fx:id="logoutButton" text="Logout" style="-fx-background-color: #e53935; -fx-text-fill: white; -fx-background-radius: 8;" />
+        </HBox>
+    </bottom>
 
 </BorderPane>

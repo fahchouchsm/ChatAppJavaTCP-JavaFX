@@ -1,45 +1,40 @@
 package com.fahchouch.client.controllers.chat;
 
 import com.fahchouch.client.Client;
-
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.Label;
 
 public class ChatPageController {
+
     private Client client;
     private String recipient;
+    private String roomName;
+    private boolean isRoom = false;
 
     @FXML
-    private ListView<String> chatList;
-
+    private Label chatTitleLabel;
     @FXML
-    private TextField messageField;
-
-    @FXML
-    private Button sendButton;
+    private Label statusLabel;
 
     public void setClient(Client client) {
         this.client = client;
     }
 
-    public void setRecipient(String recipient) {
-        this.recipient = recipient;
+    public void setRecipient(String username) {
+        this.recipient = username;
+        this.isRoom = false;
+        initChat("Chat avec " + username);
     }
 
-    @FXML
-    public void initialize() {
-        sendButton.setOnAction(e -> sendMessage());
+    public void setRoom(String roomName) {
+        this.roomName = roomName;
+        this.isRoom = true;
+        initChat("Salon: " + roomName);
     }
 
-    private void sendMessage() {
-        String msg = messageField.getText().trim();
-        if (msg.isEmpty())
-            return;
+    private void initChat(String title) {
+        chatTitleLabel.setText(title);
+        statusLabel.setText(isRoom ? "Groupe" : "En ligne");
 
-        chatList.getItems().add("Moi: " + msg);
-
-        messageField.clear();
     }
 }

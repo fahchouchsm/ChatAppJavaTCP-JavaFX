@@ -1,0 +1,95 @@
+@startuml class
+
+package "com.fahchouch.server" {
+  class Server {
+    -port: int
+    -clients: List<ClientServer>
+    -idCounter: int
+    -Rooms: List<Room>
+    --
+    +main(args: String[])
+    +runServer()
+    +getNextId(): int
+    +findClientByUsername(username: String): ClientServer
+    +searchClientsByUsername(query: String): ArrayList<SimpleClient>
+    +getUserRoomsByUsername(username: String): ArrayList<Room>
+    +addClient(client: ClientServer)
+    +removeClient(client: ClientServer)
+    +getClientsSnapshot(): List<ClientServer>
+    +showClients()
+    +getOrCreatePrivateRoom(a: ClientServer, b: ClientServer): Room
+  }
+
+  class ClientHandler <<(T,orchid) Thread>> {
+    -socket: Socket
+    -server: Server
+    -objIn: ObjectInputStream
+    -objOut: ObjectOutputStream
+    -client: ClientServer
+    --
+    +run()
+    -closeConnection()
+  }
+
+  class ClientServer {
+    -socket: Socket
+    --
+    +getSocket(): Socket
+  }
+
+  ClientServer -|> SimpleClient : extends
+}
+
+package "com.fahchouch.shared" {
+  class SimpleClient {
+    -username: String
+    -id: int
+    --
+    +getUsername(): String
+    +getId(): int
+  }
+
+  class Packet {
+    -name: String
+    -content: String = null
+    -arrlist: ArrayList<?>
+    --
+    +getName(): String
+    +getContent(): String
+    +getArrlist(): ArrayList<?>
+  }
+}
+
+package "com.fahchouch.shared.chat" {
+  class Room {
+    -roomId: int <<static nextRoomId>>
+    -name: String
+    -participants: List<ClientServer>
+    --
+    +addParticipant(client: ClientServer)
+    +getParticipants(): List<ClientServer>
+    +getName(): String
+    +getRoomId(): int
+  }
+
+  class Message {
+    -msg: String
+    -idFrom: int
+    --
+    +getMsg(): String
+    +getIdFrom(): int
+  }
+}
+
+' === RELATIONS ===
+Server "1" --> "*" ClientServer : manages
+Server "1" --> "*" Room : contains
+ClientHandler "1" --> "1" Server : uses
+ClientHandler "1" --> "1" ClientServer : handles
+Room "1" --> "*" ClientServer : has participants
+Packet <-- ClientHandler : sends/receives
+Packet <-- Server : sends/receives
+SimpleClient <-- Packet : may contain
+Room <-- Packet : may contain
+
+@enduml

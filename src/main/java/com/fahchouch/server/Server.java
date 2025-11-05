@@ -1,39 +1,57 @@
 package com.fahchouch.server;
 
+import com.fahchouch.shared.Packet;
+import com.fahchouch.shared.SimpleClient;
+import com.fahchouch.shared.chat.Room;
+
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.fahchouch.server.Room.ChatRoom;
-import com.fahchouch.shared.SimpleClient;
-
 public class Server {
     private int port;
     private final List<ClientServer> clients = Collections.synchronizedList(new ArrayList<>());
+    private final List<ClientHandler> handlers = Collections.synchronizedList(new ArrayList<>()); // ADD THIS
     private int idCounter = 0;
-    private final List<ChatRoom> chatRooms = Collections.synchronizedList(new ArrayList<>());
+    private final List<Room> Rooms = Collections.synchronizedList(new ArrayList<>());
 
     public static void main(String[] args) {
         new Server(3001).runServer();
     }
 
-    public ChatRoom getOrCreatePrivateRoom(ClientServer a, ClientServer b) {
+    public Room getOrCreatePrivateRoom(ClientServer a, ClientServer b) {
         String roomName = a.getUsername() + "_" + b.getUsername();
-
-        synchronized (chatRooms) {
-            for (ChatRoom room : chatRooms) {
-                if (room.getName().equals(roomName) || room.getName().equals(b.getUsername() + "_" + a.getUsername())) {
-                    return room;
-                }
+        for (Room room : Rooms) {
+            if (room.getName().equals(roomName) || room.getName().equals(b.getUsername() + "_" + a.getUsername())) {
+                return room;
             }
+        }
 
-            ChatRoom newRoom = new ChatRoom(roomName);
-            newRoom.addParticipant(a);
-            newRoom.addParticipant(b);
-            chatRooms.add(newRoom);
-            return newRoom;
+        Room newRoom = new Room(roomName);
+        newRoom.addParticipant(a);
+        newRoom.addParticipant(b);
+        Rooms.add(newRoom);
+
+        notifyRoomCreated(a, b, newRoom.getName());
+        return newRoom;
+    }
+
+    private void notifyRoomCreated(ClientServer a, ClientServer b, String roomName) {
+        Packet packet = new Packet("roomCreated", roomName);
+        sendToClient(a, packet);
+        sendToClient(b, packet);
+    }
+
+    private void sendToClient(ClientServer client, Packet packet) {
+        if (client == null)
+            return;
+        try {
+            client.getOutputStream().writeObject(packet);
+            client.getOutputStream().flush();
+        } catch (Exception e) {
+            System.out.println("Failed to send to " + client.getUsername());
         }
     }
 
@@ -46,11 +64,23 @@ public class Server {
             System.out.println("Server running on port " + port);
             while (true) {
                 Socket s = ss.accept();
-                new ClientHandler(s, this).start();
+                ClientHandler handler = new ClientHandler(s, this);
+                handlers.add(handler); // TRACK HANDLER
+                handler.start();
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public List<ClientHandler> getActiveHandlers() {
+        synchronized (handlers) {
+            return new ArrayList<>(handlers);
+        }
+    }
+
+    public void removeHandler(ClientHandler handler) {
+        handlers.remove(handler);
     }
 
     public synchronized int getNextId() {
@@ -61,15 +91,18 @@ public class Server {
         if (username == null)
             return null;
         synchronized (clients) {
-            return clients.stream().filter(c -> username.equals(c.getUsername())).findFirst().orElse(null);
+            return clients.stream()
+                    .filter(c -> username.equals(c.getUsername()))
+                    .findFirst()
+                    .orElse(null);
         }
     }
 
-    public List<SimpleClient> searchClientsByUsername(String query) {
+    public ArrayList<SimpleClient> searchClientsByUsername(String query) {
         if (query == null || query.isEmpty())
-            return Collections.emptyList();
+            return null;
 
-        List<SimpleClient> result = new ArrayList<>();
+        ArrayList<SimpleClient> result = new ArrayList<>();
         String lowerQuery = query.toLowerCase();
 
         synchronized (clients) {
@@ -80,7 +113,21 @@ public class Server {
                 }
             }
         }
+        return result;
+    }
 
+    public ArrayList<String> getUserRoomsByUsername(String username) {
+        ArrayList<String> result = new ArrayList<>();
+        synchronized (Rooms) {
+            for (Room room : Rooms) {
+                for (ClientServer p : room.getParticipants()) {
+                    if (username.equals(p.getUsername())) {
+                        result.add(room.getName());
+                        break;
+                    }
+                }
+            }
+        }
         return result;
     }
 
@@ -89,7 +136,9 @@ public class Server {
     }
 
     public void removeClient(ClientServer client) {
-        clients.remove(client);
+        if (client != null) {
+            clients.remove(client);
+        }
     }
 
     public List<ClientServer> getClientsSnapshot() {

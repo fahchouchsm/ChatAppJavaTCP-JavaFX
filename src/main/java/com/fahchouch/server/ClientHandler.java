@@ -1,7 +1,7 @@
 package com.fahchouch.server;
 
-import com.fahchouch.server.Room.ChatRoom;
 import com.fahchouch.shared.Packet;
+import com.fahchouch.shared.SimpleClient;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -27,7 +27,6 @@ public class ClientHandler extends Thread {
             objOut.flush();
             objIn = new ObjectInputStream(socket.getInputStream());
 
-            // Login
             Packet loginPacket = (Packet) objIn.readObject();
             String username = loginPacket.getName();
             System.out.println("Login attempt: " + username);
@@ -35,7 +34,7 @@ public class ClientHandler extends Thread {
             Packet response;
             synchronized (server) {
                 if (server.findClientByUsername(username) == null) {
-                    client = new ClientServer(username, server.getNextId(), socket);
+                    client = new ClientServer(username, server.getNextId(), socket, objOut);
                     server.addClient(client);
                     response = new Packet("response", "1");
                     server.showClients();
@@ -51,19 +50,26 @@ public class ClientHandler extends Thread {
                 return;
             }
 
-            // Handle requests
             while (true) {
                 Packet packet = (Packet) objIn.readObject();
-                if (packet == null)
-                    continue;
+                String query = packet.getContent();
                 System.out.println(packet.getName());
                 switch (packet.getName()) {
                     case "searchClient":
-                        String query = packet.getContent();
-                        var clientsFound = server.searchClientsByUsername(query);
+                        ArrayList<SimpleClient> clientsFound = server.searchClientsByUsername(query);
                         Packet result = new Packet("searchResult", new ArrayList<>(clientsFound));
                         objOut.writeObject(result);
                         objOut.flush();
+                        break;
+                    case "getUserRooms":
+                        objOut.writeObject(
+                                new Packet("getUserRoomsResult", server.getUserRoomsByUsername(packet.getContent())));
+                        objOut.flush();
+                    case "createPrivateRoom":
+                        ClientServer other = server.findClientByUsername(query);
+                        if (other != null && !other.equals(client)) {
+                            server.getOrCreatePrivateRoom(client, other);
+                        }
                         break;
                 }
 
@@ -73,6 +79,7 @@ public class ClientHandler extends Thread {
             System.out.println("Client disconnected: " + (client != null ? client.getUsername() : "unknown"));
         } finally {
             server.removeClient(client);
+            server.removeHandler(this);
             closeConnection();
         }
     }
@@ -92,6 +99,19 @@ public class ClientHandler extends Thread {
             if (socket != null && !socket.isClosed())
                 socket.close();
         } catch (Exception ignored) {
+        }
+    }
+
+    public ClientServer getClient() {
+        return client;
+    }
+
+    public void sendPacket(Packet packet) {
+        try {
+            objOut.writeObject(packet);
+            objOut.flush();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

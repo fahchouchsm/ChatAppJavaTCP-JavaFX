@@ -1,4 +1,4 @@
-package com.fahchouch.server.Room;
+package com.fahchouch.shared.chat;
 
 import java.io.Serializable;
 
