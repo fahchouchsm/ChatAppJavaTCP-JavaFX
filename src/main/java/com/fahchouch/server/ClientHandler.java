@@ -2,6 +2,7 @@ package com.fahchouch.server;
 
 import com.fahchouch.shared.Packet;
 import com.fahchouch.shared.SimpleClient;
+import com.fahchouch.shared.chat.Room;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -72,6 +73,19 @@ public class ClientHandler extends Thread {
                             server.getOrCreatePrivateRoom(client, other);
                         }
                         break;
+                    case "message": {
+                        String[] parts = packet.getContent().split("\\|", 2);
+                        if (parts.length == 2) {
+                            String roomName = parts[0];
+                            String msg = parts[1];
+                            Room room = server.findRoomByName(roomName);
+                            if (room != null) {
+                                room.broadcastMessage(client.getUsername() + ": " + msg);
+                            }
+                        }
+                        break;
+                    }
+
                 }
 
             }

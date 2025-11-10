@@ -142,15 +142,15 @@ public class MainPageController {
     private void openRoomChat(String roomName) {
         try {
             FXMLLoader loader = new FXMLLoader(
-                    getClass().getClassLoader().getResource("com/fahchouch/client/chat/chat.fxml"));
-            javafx.scene.Parent root = loader.load();
+                    ClientRunner.class.getResource("/com/fahchouch/client/chat/chat.fxml"));
+            Parent root = loader.load();
             ChatPageController chatController = loader.getController();
             chatController.setClient(client);
             chatController.setRoom(roomName);
 
-            javafx.stage.Stage stage = new javafx.stage.Stage();
+            Stage stage = new Stage();
             stage.setTitle("Salon: " + roomName);
-            stage.setScene(new javafx.scene.Scene(root));
+            stage.setScene(new Scene(root));
             stage.show();
         } catch (Exception e) {
             e.printStackTrace();

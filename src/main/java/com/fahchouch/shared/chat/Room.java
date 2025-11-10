@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fahchouch.server.ClientServer;
+import com.fahchouch.shared.Packet;
 
 public class Room {
   private static int nextRoomId = 1;
@@ -36,6 +37,18 @@ public class Room {
 
   public int getRoomId() {
     return roomId;
+  }
+
+  public void broadcastMessage(String message) {
+    com.fahchouch.shared.Packet packet = new com.fahchouch.shared.Packet("message", message);
+    for (ClientServer participant : participants) {
+      try {
+        participant.getOutputStream().writeObject(packet);
+        participant.getOutputStream().flush();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
   }
 
 }

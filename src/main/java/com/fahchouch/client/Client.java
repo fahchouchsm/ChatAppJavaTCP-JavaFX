@@ -21,6 +21,21 @@ public class Client {
     private String username;
     private final Thread packetListener = new Thread(this::listenForPackets);
     private Runnable onRoomCreated;
+    private Consumer<String> onMessageReceived;
+
+    private void handleIncomingMessage(String message) {
+        if (onMessageReceived != null) {
+            Platform.runLater(() -> onMessageReceived.accept(message));
+        }
+    }
+
+    public void setOnMessageReceived(Consumer<String> callback) {
+        this.onMessageReceived = callback;
+    }
+
+    public void sendMessage(String roomName, String message) {
+        sendObject(new Packet("message", roomName + "|" + message));
+    }
 
     public Client() {
         try {

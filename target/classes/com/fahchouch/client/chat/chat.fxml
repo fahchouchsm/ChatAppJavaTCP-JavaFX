@@ -1,27 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<BorderPane xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1"
+<BorderPane xmlns="http://javafx.com/javafx/25"
+            xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.fahchouch.client.controllers.chat.ChatPageController"
             style="-fx-background-color: #1e1e2f;">
 
     <top>
         <VBox spacing="5" style="-fx-padding: 15; -fx-background-color: #2e2e4a;">
-            <Label fx:id="chatTitleLabel" text="Chat" 
+            <Label fx:id="chatTitleLabel" text="Chat"
                    style="-fx-text-fill: white; -fx-font-size: 18; -fx-font-weight: bold;" />
-            <Label fx:id="statusLabel" text="En ligne" 
+            <Label fx:id="statusLabel" text="En ligne"
                    style="-fx-text-fill: #43a047; -fx-font-size: 14;" />
         </VBox>
     </top>
 
     <center>
-        <VBox style="-fx-padding: 20;">
-            <Label text="Room opened! (No messages yet)" 
-                   style="-fx-text-fill: #888; -fx-font-size: 16;" />
+        <VBox spacing="10" style="-fx-padding: 15;">
+            <TextArea fx:id="chatArea" editable="false" wrapText="true"
+                      style="-fx-background-color: #252537; -fx-text-fill: white; -fx-font-size: 14;" />
+            <HBox spacing="10">
+                <TextField fx:id="messageField" promptText="Écrire un message..."
+                           style="-fx-background-color: #2e2e4a; -fx-text-fill: white; -fx-background-radius: 8;" HBox.hgrow="ALWAYS"/>
+                <Button text="Envoyer" fx:id="sendButton"
+                        style="-fx-background-color: #5c6bc0; -fx-text-fill: white; -fx-background-radius: 8;"
+                        onAction="#sendMessage"/>
+            </HBox>
         </VBox>
     </center>
-
 </BorderPane>

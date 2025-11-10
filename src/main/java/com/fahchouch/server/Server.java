@@ -44,6 +44,16 @@ public class Server {
         sendToClient(b, packet);
     }
 
+    public Room findRoomByName(String name) {
+        synchronized (Rooms) {
+            for (Room room : Rooms) {
+                if (room.getName().equals(name))
+                    return room;
+            }
+        }
+        return null;
+    }
+
     private void sendToClient(ClientServer client, Packet packet) {
         if (client == null)
             return;
