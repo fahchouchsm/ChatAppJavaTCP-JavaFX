@@ -1,20 +1,18 @@
 package com.fahchouch.shared.chat;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.fahchouch.server.ClientServer;
 import com.fahchouch.shared.Packet;
 
-public class Room {
-  private static int nextRoomId = 1;
-  private final int roomId;
-  private final String name;
-  private final List<ClientServer> participants = new ArrayList<>();
+import java.util.ArrayList;
 
-  public Room(String name) {
+public class Room {
+  private static int nextRoomId = 1000;
+  private final int roomId;
+  private final ArrayList<ClientServer> participants = new ArrayList<>();
+  private final ArrayList<String[]> messageHistory = new ArrayList<>(); // [sender, msg]
+
+  public Room() {
     this.roomId = getNextRoomId();
-    this.name = name;
   }
 
   private static synchronized int getNextRoomId() {
@@ -22,33 +20,55 @@ public class Room {
   }
 
   public void addParticipant(ClientServer client) {
-    if (!participants.contains(client)) {
+    if (client != null && !participants.contains(client)) {
       participants.add(client);
     }
   }
 
-  public List<ClientServer> getParticipants() {
-    return participants;
+  public ArrayList<ClientServer> getParticipants() {
+    return new ArrayList<>(participants);
   }
 
   public String getName() {
-    return name;
+    return String.valueOf(roomId);
   }
 
-  public int getRoomId() {
-    return roomId;
-  }
+  public void broadcastMessage(String sender, String message) {
+    // Save to history
+    messageHistory.add(new String[] { sender, message });
 
-  public void broadcastMessage(String message) {
-    com.fahchouch.shared.Packet packet = new com.fahchouch.shared.Packet("message", message);
-    for (ClientServer participant : participants) {
+    ArrayList<String> data = new ArrayList<>();
+    data.add(getName());
+    data.add(sender);
+    data.add(message);
+
+    for (ClientServer p : participants) {
       try {
-        participant.getOutputStream().writeObject(packet);
-        participant.getOutputStream().flush();
+        p.getOutputStream().writeObject(new Packet("message", null, data));
+        p.getOutputStream().flush();
       } catch (Exception e) {
         e.printStackTrace();
       }
     }
   }
 
+  public ArrayList<String[]> getMessageHistory() {
+    return new ArrayList<>(messageHistory);
+  }
+
+  public void broadcastFile(String sender, String payload) {
+    ArrayList<String> data = new ArrayList<>();
+    data.add(getName());
+    data.add(sender);
+    data.add(payload);
+
+    for (ClientServer p : participants) {
+      try {
+        p.getOutputStream().writeObject(new Packet("file", null, data));
+        p.getOutputStream().flush();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+  }
 }

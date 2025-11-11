@@ -53,43 +53,61 @@ public class ClientHandler extends Thread {
 
             while (true) {
                 Packet packet = (Packet) objIn.readObject();
-                String query = packet.getContent();
-                System.out.println(packet.getName());
+                String query = (String) packet.getContent();
+                System.out.println("Packet: " + packet.getName());
                 switch (packet.getName()) {
-                    case "searchClient":
+                    case "searchClient" -> {
                         ArrayList<SimpleClient> clientsFound = server.searchClientsByUsername(query);
-                        Packet result = new Packet("searchResult", new ArrayList<>(clientsFound));
-                        objOut.writeObject(result);
+                        objOut.writeObject(new Packet("searchResult", null, new ArrayList<>(clientsFound)));
                         objOut.flush();
-                        break;
-                    case "getUserRooms":
-                        objOut.writeObject(
-                                new Packet("getUserRoomsResult", server.getUserRoomsByUsername(packet.getContent())));
+                    }
+                    case "getUserRooms" -> {
+                        ArrayList<Object> roomsData = server.getUserRoomsByUsername(query);
+                        objOut.writeObject(new Packet("getUserRoomsResult", null, roomsData));
                         objOut.flush();
-                        break;
-                    case "createPrivateRoom":
+                    }
+                    case "createPrivateRoom" -> {
                         ClientServer other = server.findClientByUsername(query);
                         if (other != null && !other.equals(client)) {
                             server.getOrCreatePrivateRoom(client, other);
                         }
-                        break;
-                    case "message": {
-                        String[] parts = packet.getContent().split("\\|", 2);
-                        if (parts.length == 2) {
-                            String roomName = parts[0];
-                            String msg = parts[1];
-                            Room room = server.findRoomByName(roomName);
-                            if (room != null) {
-                                room.broadcastMessage(client.getUsername() + ": " + msg);
-                            }
-                        }
-                        break;
                     }
+                    case "message" -> {
+                        ArrayList<?> data = packet.getArrlist();
+                        String roomName = (String) data.get(0);
+                        String sender = (String) data.get(1);
+                        String msg = (String) data.get(2);
+                        Room room = server.findRoomByName(roomName);
+                        if (room != null) {
+                            room.broadcastMessage(sender, msg);
+                        }
+                    }
+                    case "getHistory" -> {
+                        String roomName = (String) packet.getContent();
+                        ArrayList<String[]> history = server.getRoomHistory(roomName);
+                        ArrayList<Object> data = new ArrayList<>();
+                        for (String[] msg : history) {
+                            ArrayList<String> entry = new ArrayList<>();
+                            entry.add(msg[0]);
+                            entry.add(msg[1]);
+                            data.add(entry);
+                        }
+                        objOut.writeObject(new Packet("roomHistory", null, data));
+                        objOut.flush();
+                    }
+                    case "file" -> {
+                        ArrayList<?> data = packet.getArrlist();
+                        String roomName = (String) data.get(0);
+                        String sender = (String) data.get(1);
+                        String payload = (String) data.get(2);
 
+                        Room room = server.findRoomByName(roomName);
+                        if (room != null) {
+                            room.broadcastFile(sender, payload);
+                        }
+                    }
                 }
-
             }
-
         } catch (Exception e) {
             System.out.println("Client disconnected: " + (client != null ? client.getUsername() : "unknown"));
         } finally {
@@ -119,14 +137,5 @@ public class ClientHandler extends Thread {
 
     public ClientServer getClient() {
         return client;
-    }
-
-    public void sendPacket(Packet packet) {
-        try {
-            objOut.writeObject(packet);
-            objOut.flush();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 }

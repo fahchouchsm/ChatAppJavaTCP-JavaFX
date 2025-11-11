@@ -1,28 +1,24 @@
 package com.fahchouch.client.controllers.main;
 
-import java.util.List;
-
 import com.fahchouch.client.Client;
 import com.fahchouch.client.ClientRunner;
 import com.fahchouch.client.controllers.chat.ChatPageController;
 import com.fahchouch.shared.Packet;
 import com.fahchouch.shared.SimpleClient;
-
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.stage.Stage;
+import java.util.ArrayList;
 
 public class MainPageController {
 
     private Client client;
+    private String pendingChatUser = null;
 
     @FXML
     private TextField searchField;
@@ -46,26 +42,23 @@ public class MainPageController {
 
     @FXML
     public void initialize() {
-
         searchField.setOnAction(e -> searchUserOrRoom());
         searchButton.setOnAction(e -> searchUserOrRoom());
         publicRoomButton.setOnAction(e -> joinPublicRoom());
 
-        usersListView.setOnMouseClicked(event -> {
-            if (event.getClickCount() == 2) {
-                String selectedUser = usersListView.getSelectionModel().getSelectedItem();
-                if (selectedUser != null && !selectedUser.equals("Aucun résultat")) {
-                    openChat(selectedUser);
-                }
+        usersListView.setOnMouseClicked(e -> {
+            if (e.getClickCount() == 2) {
+                String user = usersListView.getSelectionModel().getSelectedItem();
+                if (user != null && !user.equals("Aucun résultat"))
+                    openChat(user);
             }
         });
 
-        roomsListView.setOnMouseClicked(event -> {
-            if (event.getClickCount() == 2) {
-                String selectedRoom = roomsListView.getSelectionModel().getSelectedItem();
-                if (selectedRoom != null && !selectedRoom.equals("Aucun salon")) {
-                    openRoomChat(selectedRoom);
-                }
+        roomsListView.setOnMouseClicked(e -> {
+            if (e.getClickCount() == 2) {
+                String display = roomsListView.getSelectionModel().getSelectedItem();
+                if (display != null && !display.equals("Aucun salon"))
+                    openRoomChat(display);
             }
         });
 
@@ -73,85 +66,116 @@ public class MainPageController {
     }
 
     private void searchUserOrRoom() {
-        String query = searchField.getText().trim();
-        if (query.isEmpty())
+        String q = searchField.getText().trim();
+        if (q.isEmpty())
             return;
-
-        String name = Character.isDigit(query.charAt(0)) ? "searchRoom" : "searchClient";
-        client.sendObject(new Packet(name, query));
-        // NO receiveObject() — result comes via listener
+        String type = Character.isDigit(q.charAt(0)) ? "searchRoom" : "searchClient";
+        client.sendObject(new Packet(type, q));
     }
 
     public void setClient(Client client) {
         this.client = client;
-
-        // REAL-TIME CALLBACKS
-        client.setOnRoomCreated(this::loadUserRooms);
+        client.setOnRoomCreated(this::handleRoomCreated);
         client.setOnSearchResult(this::updateUsersList);
         client.setOnGetUserRoomsResult(this::updateRoomsList);
     }
 
-    private void updateUsersList(List<SimpleClient> clients) {
-        if (clients.isEmpty()) {
+    private void updateUsersList(ArrayList<SimpleClient> clients) {
+        if (clients == null || clients.isEmpty()) {
             usersListView.setItems(FXCollections.observableArrayList("Aucun résultat"));
         } else {
-            ObservableList<String> usernames = FXCollections.observableArrayList();
-            for (SimpleClient sc : clients) {
-                usernames.add(sc.getUsername());
-            }
-            usersListView.setItems(usernames);
+            ArrayList<String> names = new ArrayList<>();
+            for (SimpleClient c : clients)
+                names.add(c.getUsername());
+            usersListView.setItems(FXCollections.observableArrayList(names));
         }
     }
 
-    private void updateRoomsList(List<String> rooms) {
-        if (rooms.isEmpty()) {
+    private void updateRoomsList(ArrayList<Object> roomsData) {
+        if (roomsData == null || roomsData.isEmpty()) {
             roomsListView.setItems(FXCollections.observableArrayList("Aucun salon"));
-        } else {
-            roomsListView.setItems(FXCollections.observableArrayList(rooms));
+            return;
         }
+
+        ArrayList<String> display = new ArrayList<>();
+        for (Object entry : roomsData) {
+            @SuppressWarnings("unchecked")
+            ArrayList<Object> roomInfo = (ArrayList<Object>) entry;
+            String roomId = (String) roomInfo.get(0);
+            @SuppressWarnings("unchecked")
+            ArrayList<String> users = (ArrayList<String>) roomInfo.get(1);
+
+            ArrayList<String> others = new ArrayList<>(users);
+            others.remove(client.getUsername());
+            String othersStr = others.isEmpty() ? "seul" : String.join(", ", others);
+
+            display.add(roomId + " (" + othersStr + ")");
+        }
+        roomsListView.setItems(FXCollections.observableArrayList(display));
     }
 
     private void loadUserRooms() {
-        if (client == null)
-            return;
-        client.sendObject(new Packet("getUserRooms", client.getUsername()));
-        // NO receiveObject()
+        if (client != null)
+            client.sendObject(new Packet("getUserRooms", client.getUsername()));
     }
 
     private void openChat(String username) {
-        try {
-
-            client.sendObject(new Packet("createPrivateRoom", username));
-
-            FXMLLoader loader = new FXMLLoader(ClientRunner.class.getResource("/com/fahchouch/client/chat/chat.fxml"));
-            Parent root = loader.load();
-            ChatPageController ctrl = loader.getController();
-            ctrl.setClient(client);
-            ctrl.setRecipient(username);
-
-            Stage stage = new Stage();
-            stage.setTitle("Chat avec " + username);
-            stage.setScene(new Scene(root));
-            stage.show();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        this.pendingChatUser = username;
+        client.sendObject(new Packet("createPrivateRoom", username));
     }
 
-    private void openRoomChat(String roomName) {
+    private void handleRoomCreated(String roomId) {
+        Platform.runLater(() -> {
+            if (pendingChatUser == null) {
+                loadUserRooms();
+                return;
+            }
+
+            String user = pendingChatUser;
+            pendingChatUser = null;
+
+            try {
+                FXMLLoader loader = new FXMLLoader(
+                        ClientRunner.class.getResource("/com/fahchouch/client/chat/chat.fxml"));
+                Parent root = loader.load();
+                ChatPageController ctrl = loader.getController();
+
+                ctrl.setRoom(roomId);
+                ctrl.initializeUI("Chat avec " + user);
+                ctrl.setClient(client);
+
+                Stage stage = new Stage();
+                stage.setTitle("Chat avec " + user);
+                stage.setScene(new Scene(root));
+                stage.show();
+
+                loadUserRooms();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    private void openRoomChat(String displayText) {
         try {
+            String roomId = displayText.split(" ")[0];
+
             FXMLLoader loader = new FXMLLoader(
                     ClientRunner.class.getResource("/com/fahchouch/client/chat/chat.fxml"));
             Parent root = loader.load();
-            ChatPageController chatController = loader.getController();
-            chatController.setClient(client);
-            chatController.setRoom(roomName);
+            ChatPageController ctrl = loader.getController();
+
+            ctrl.setRoom(roomId);
+            ctrl.initializeUI("Salon: " + displayText);
+            ctrl.setClient(client);
 
             Stage stage = new Stage();
-            stage.setTitle("Salon: " + roomName);
+            stage.setTitle("Salon: " + displayText);
             stage.setScene(new Scene(root));
             stage.show();
+
+            ctrl.getClient().requestHistory(roomId);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -159,11 +183,9 @@ public class MainPageController {
 
     private void joinPublicRoom() {
         openRoomChat("Public");
-        System.out.println("🟢 Rejoint le salon public !");
     }
 
     private void logout() {
-        System.out.println("👋 User logged out!");
-
+        System.out.println("User logged out!");
     }
 }

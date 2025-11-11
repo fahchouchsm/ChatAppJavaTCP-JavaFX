@@ -1,6 +1,7 @@
 package com.fahchouch.client.controllers.login;
 
 import com.fahchouch.client.Client;
+import com.fahchouch.client.controllers.chat.ChatWindowManager;
 import com.fahchouch.client.controllers.main.MainPageController;
 import com.fahchouch.client.fx.FxEventHandler;
 import javafx.fxml.FXML;
@@ -44,11 +45,12 @@ public class LoginPageController {
             if (res == 1) {
                 client.setUsername(username);
                 client.startListening();
+                client.setOnMessageReceived(ChatWindowManager::handleIncomingMessage);
 
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/fahchouch/client/main/main.fxml"));
                 Parent root = loader.load();
                 MainPageController m = loader.getController();
-                m.setClient(client); // ← sets onRoomCreated
+                m.setClient(client);
                 m.initAfterLogin();
 
                 Scene scene = new Scene(root);

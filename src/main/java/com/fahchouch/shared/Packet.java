@@ -5,41 +5,33 @@ import java.util.ArrayList;
 
 public class Packet implements Serializable {
     private String name;
-    private String content = null;
+    private Object content;
     private ArrayList<?> arrlist;
 
-    public Packet(String name, String content) {
+    public Packet(String name) {
+        this.name = name;
+    }
+
+    public Packet(String name, Object content) {
         this.name = name;
         this.content = content;
     }
 
-    public Packet(String name, ArrayList<?> objs) {
+    public Packet(String name, Object content, ArrayList<?> arrlist) {
         this.name = name;
-        this.arrlist = objs;
-    }
-
-    public Packet(String name) {
-        this.name = name;
-        this.content = null;
+        this.content = content;
+        this.arrlist = arrlist;
     }
 
     public String getName() {
         return name;
     }
 
-    public String getContent() {
+    public Object getContent() {
         return content;
     }
 
     public ArrayList<?> getArrlist() {
-        return arrlist;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public void setArrlist(ArrayList<?> arrlist) {
-        this.arrlist = arrlist;
+        return arrlist != null ? new ArrayList<>(arrlist) : null;
     }
 }

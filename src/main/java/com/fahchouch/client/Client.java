@@ -2,16 +2,13 @@ package com.fahchouch.client;
 
 import com.fahchouch.shared.Packet;
 import com.fahchouch.shared.SimpleClient;
-
 import javafx.application.Platform;
-
 import com.fahchouch.client.fx.FxEventHandler;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Consumer;
 
 public class Client {
@@ -20,21 +17,40 @@ public class Client {
     private ObjectInputStream objIn;
     private String username;
     private final Thread packetListener = new Thread(this::listenForPackets);
-    private Runnable onRoomCreated;
-    private Consumer<String> onMessageReceived;
+    private Consumer<ArrayList<Object>> onRoomHistory;
+    private Consumer<String> onRoomCreated;
+    private Consumer<Packet> onMessageReceived;
+    private Consumer<ArrayList<SimpleClient>> onSearchResult;
+    private Consumer<ArrayList<Object>> onGetUserRoomsResult;
+    private Consumer<Packet> onFileReceived;
 
-    private void handleIncomingMessage(String message) {
-        if (onMessageReceived != null) {
-            Platform.runLater(() -> onMessageReceived.accept(message));
-        }
+    public void setOnFileReceived(Consumer<Packet> callback) {
+        this.onFileReceived = callback;
     }
 
-    public void setOnMessageReceived(Consumer<String> callback) {
+    public void setOnRoomHistory(Consumer<ArrayList<Object>> callback) {
+        this.onRoomHistory = callback;
+    }
+
+    public void setOnRoomCreated(Consumer<String> callback) {
+        this.onRoomCreated = callback;
+    }
+
+    public void setOnMessageReceived(Consumer<Packet> callback) {
         this.onMessageReceived = callback;
     }
 
-    public void sendMessage(String roomName, String message) {
-        sendObject(new Packet("message", roomName + "|" + message));
+    public void setOnSearchResult(Consumer<ArrayList<SimpleClient>> callback) {
+        this.onSearchResult = callback;
+    }
+
+    public void setOnGetUserRoomsResult(Consumer<ArrayList<Object>> callback) {
+        this.onGetUserRoomsResult = callback;
+    }
+
+    public void startListening() {
+        packetListener.setDaemon(true);
+        packetListener.start();
     }
 
     public Client() {
@@ -43,26 +59,10 @@ public class Client {
             objOut = new ObjectOutputStream(socket.getOutputStream());
             objOut.flush();
             objIn = new ObjectInputStream(socket.getInputStream());
-
         } catch (Exception e) {
             e.printStackTrace();
             FxEventHandler.showAlert("Impossible de se connecter au serveur");
         }
-    }
-
-    private Consumer<List<SimpleClient>> onSearchResult;
-
-    public void setOnSearchResult(Consumer<List<SimpleClient>> callback) {
-        this.onSearchResult = callback;
-    }
-
-    public void startListening() {
-        packetListener.setDaemon(true);
-        packetListener.start();
-    }
-
-    public void setOnRoomCreated(Runnable callback) {
-        this.onRoomCreated = callback;
     }
 
     private void listenForPackets() {
@@ -71,9 +71,45 @@ public class Client {
                 Object obj = objIn.readObject();
                 if (obj instanceof Packet packet) {
                     switch (packet.getName()) {
-                        case "roomCreated" -> handleRoomCreated(packet.getContent());
-                        case "searchResult" -> handleSearchResult((ArrayList<SimpleClient>) packet.getArrlist());
-                        case "getUserRoomsResult" -> handleGetUserRoomsResult((ArrayList<String>) packet.getArrlist());
+                        case "roomCreated" -> {
+                            String roomId = (String) packet.getContent();
+                            if (onRoomCreated != null) {
+                                Platform.runLater(() -> onRoomCreated.accept(roomId));
+                            }
+                        }
+                        case "searchResult" -> {
+                            @SuppressWarnings("unchecked")
+                            ArrayList<SimpleClient> results = (ArrayList<SimpleClient>) packet.getArrlist();
+                            if (onSearchResult != null) {
+                                Platform.runLater(
+                                        () -> onSearchResult.accept(results != null ? results : new ArrayList<>()));
+                            }
+                        }
+                        case "getUserRoomsResult" -> {
+                            @SuppressWarnings("unchecked")
+                            ArrayList<Object> roomsData = (ArrayList<Object>) packet.getArrlist();
+                            if (onGetUserRoomsResult != null) {
+                                Platform.runLater(() -> onGetUserRoomsResult
+                                        .accept(roomsData != null ? roomsData : new ArrayList<>()));
+                            }
+                        }
+                        case "message" -> {
+                            if (onMessageReceived != null) {
+                                Platform.runLater(() -> onMessageReceived.accept(packet));
+                            }
+                        }
+                        case "roomHistory" -> {
+                            @SuppressWarnings("unchecked")
+                            ArrayList<Object> history = (ArrayList<Object>) packet.getArrlist();
+                            if (onRoomHistory != null) {
+                                Platform.runLater(() -> onRoomHistory.accept(history));
+                            }
+                        }
+                        case "file" -> {
+                            if (onFileReceived != null) {
+                                Platform.runLater(() -> onFileReceived.accept(packet));
+                            }
+                        }
                     }
                 }
             }
@@ -82,28 +118,8 @@ public class Client {
         }
     }
 
-    private void handleSearchResult(ArrayList<SimpleClient> results) {
-        if (onSearchResult != null) {
-            Platform.runLater(() -> onSearchResult.accept(results != null ? results : new ArrayList<>()));
-        }
-    }
-
-    private void handleGetUserRoomsResult(ArrayList<String> rooms) {
-        if (onGetUserRoomsResult != null) {
-            Platform.runLater(() -> onGetUserRoomsResult.accept(rooms != null ? rooms : new ArrayList<>()));
-        }
-    }
-
-    private Consumer<List<String>> onGetUserRoomsResult;
-
-    public void setOnGetUserRoomsResult(Consumer<List<String>> callback) {
-        this.onGetUserRoomsResult = callback;
-    }
-
-    private void handleRoomCreated(String roomName) {
-        if (onRoomCreated != null) {
-            javafx.application.Platform.runLater(onRoomCreated);
-        }
+    public void requestHistory(String roomName) {
+        sendObject(new Packet("getHistory", roomName));
     }
 
     public int login(String username) {
@@ -111,7 +127,6 @@ public class Client {
             Packet packet = new Packet(username);
             objOut.writeObject(packet);
             objOut.flush();
-
             Packet response = (Packet) objIn.readObject();
             if (response != null && "1".equals(response.getContent())) {
                 this.username = username;
@@ -133,24 +148,12 @@ public class Client {
         }
     }
 
-    public Object receiveObject() {
-        try {
-            return objIn.readObject();
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     public String getUsername() {
         return username;
     }
 
     public void setUsername(String username) {
         this.username = username;
-    }
-
-    public Socket getSocket() {
-        return socket;
     }
 
     public static boolean isUsernameValid(String username) {

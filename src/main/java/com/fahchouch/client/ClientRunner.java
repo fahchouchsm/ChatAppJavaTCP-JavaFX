@@ -18,7 +18,7 @@ public class ClientRunner extends Application {
         launch(args);
     }
 
-    public void start(@SuppressWarnings("exports") Stage stage) throws Exception {
+    public void start(Stage stage) throws Exception {
         Scene scene = new Scene(
                 new FXMLLoader(getClass().getResource("/com/fahchouch/client/login/login.fxml")).load());
         stage.setResizable(false);
