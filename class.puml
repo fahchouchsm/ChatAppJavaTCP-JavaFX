@@ -1,95 +1,135 @@
-@startuml class
+@startuml classdiagram
+
+package "com.fahchouch.client" {
+  class Client {
+    -Socket socket
+    -ObjectOutputStream objOut
+    -ObjectInputStream objIn
+    -String username
+    +login(String): int
+    +sendObject(Object)
+    +requestHistory(String)
+    +getUsername(): String
+    +startListening()
+  }
+  
+  class ClientRunner {
+    +start(Stage)
+  }
+  
+  package "controllers.chat" {
+    class ChatPageController {
+      @FXML Label chatTitleLabel
+      @FXML ScrollPane scrollPane
+      @FXML VBox messagesBox
+      @FXML TextField messageField
+      +setClient(Client)
+      +setRoom(String)
+      +initializeUI(String)
+      +appendMessage(String, String, boolean)
+      +appendFileMessage(String, String, String, boolean)
+      -sendMessage()
+      -sendFile(File)
+      -handleFileReceived(Packet)
+    }
+    
+    class ChatWindowManager {
+      {static} -ArrayList<ChatPageController> openChats
+      {static} +register(ChatPageController)
+      {static} +handleIncomingMessage(Packet)
+      {static} +handleFile(Packet)
+    }
+  }
+  
+  package "fx" {
+    class FxEventHandler {
+      {static} +showAlert(String)
+    }
+  }
+}
 
 package "com.fahchouch.server" {
   class Server {
-    -port: int
-    -clients: List<ClientServer>
-    -idCounter: int
-    -Rooms: List<Room>
-    --
-    +main(args: String[])
+    -int port
+    -ArrayList<ClientServer> clients
+    -ArrayList<Room> rooms
     +runServer()
-    +getNextId(): int
-    +findClientByUsername(username: String): ClientServer
-    +searchClientsByUsername(query: String): ArrayList<SimpleClient>
-    +getUserRoomsByUsername(username: String): ArrayList<Room>
-    +addClient(client: ClientServer)
-    +removeClient(client: ClientServer)
-    +getClientsSnapshot(): List<ClientServer>
-    +showClients()
-    +getOrCreatePrivateRoom(a: ClientServer, b: ClientServer): Room
+    +addClient(ClientServer)
+    +findClientByUsername(String): ClientServer
+    +getOrCreatePrivateRoom(ClientServer, ClientServer): Room
+    +findRoomByName(String): Room
   }
-
-  class ClientHandler <<(T,orchid) Thread>> {
-    -socket: Socket
-    -server: Server
-    -objIn: ObjectInputStream
-    -objOut: ObjectOutputStream
-    -client: ClientServer
-    --
+  
+  class ClientHandler {
+    -Socket socket
+    -ObjectInputStream objIn
+    -ObjectOutputStream objOut
+    -ClientServer client
     +run()
-    -closeConnection()
   }
-
+  
   class ClientServer {
-    -socket: Socket
-    --
-    +getSocket(): Socket
+    -Socket socket
+    -ObjectOutputStream objOut
+    +getOutputStream(): ObjectOutputStream
   }
-
-  ClientServer -|> SimpleClient : extends
 }
 
 package "com.fahchouch.shared" {
+  class Packet {
+    -String name
+    -Object content
+    -ArrayList<?> arrlist
+    +getName(): String
+    +getContent(): Object
+    +getArrlist(): ArrayList<?>
+  }
+  
   class SimpleClient {
-    -username: String
-    -id: int
-    --
+    -String username
+    -int id
     +getUsername(): String
     +getId(): int
-  }
-
-  class Packet {
-    -name: String
-    -content: String = null
-    -arrlist: ArrayList<?>
-    --
-    +getName(): String
-    +getContent(): String
-    +getArrlist(): ArrayList<?>
   }
 }
 
 package "com.fahchouch.shared.chat" {
   class Room {
-    -roomId: int <<static nextRoomId>>
-    -name: String
-    -participants: List<ClientServer>
-    --
-    +addParticipant(client: ClientServer)
-    +getParticipants(): List<ClientServer>
+    {static} -int nextRoomId
+    -int roomId
+    -ArrayList<ClientServer> participants
+    -ArrayList<String[]> messageHistory
+    +addParticipant(ClientServer)
+    +broadcastMessage(String, String)
+    +broadcastFile(String, String)
     +getName(): String
-    +getRoomId(): int
+    +getMessageHistory(): ArrayList<String[]>
   }
-
+  
   class Message {
-    -msg: String
-    -idFrom: int
-    --
+    -String msg
+    -int idFrom
     +getMsg(): String
     +getIdFrom(): int
   }
 }
 
-' === RELATIONS ===
-Server "1" --> "*" ClientServer : manages
-Server "1" --> "*" Room : contains
-ClientHandler "1" --> "1" Server : uses
-ClientHandler "1" --> "1" ClientServer : handles
-Room "1" --> "*" ClientServer : has participants
-Packet <-- ClientHandler : sends/receives
-Packet <-- Server : sends/receives
-SimpleClient <-- Packet : may contain
-Room <-- Packet : may contain
+' === Relationships ===
+Client --> Packet : sends/receives
+Client --> FxEventHandler : uses
+ClientRunner --> Client : launches
+ChatPageController --> Client : uses
+ChatPageController --> Packet : handles
+ChatWindowManager --> ChatPageController : manages
+ChatWindowManager --> Packet : routes
+ClientHandler --> Server : belongs to
+ClientHandler --> ClientServer : creates
+ClientHandler --> Packet : reads/writes
+ClientServer ..|> SimpleClient
+Server --> ClientServer : contains
+Server --> Room : contains
+Room --> ClientServer : has participants
+Room --> Packet : broadcasts
+Client --> ChatPageController : registers via ChatWindowManager
 
 @enduml
