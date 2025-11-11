@@ -22,6 +22,7 @@ public class Client {
     private Consumer<Packet> onMessageReceived;
     private Consumer<ArrayList<SimpleClient>> onSearchResult;
     private Consumer<ArrayList<Object>> onGetUserRoomsResult;
+
     private Consumer<Packet> onFileReceived;
 
     public void setOnFileReceived(Consumer<Packet> callback) {

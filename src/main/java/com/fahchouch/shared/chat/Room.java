@@ -57,6 +57,8 @@ public class Room {
   }
 
   public void broadcastFile(String sender, String payload) {
+    messageHistory.add(new String[] { sender, payload, "file" });
+
     ArrayList<String> data = new ArrayList<>();
     data.add(getName());
     data.add(sender);

@@ -90,6 +90,8 @@ public class ClientHandler extends Thread {
                             ArrayList<String> entry = new ArrayList<>();
                             entry.add(msg[0]);
                             entry.add(msg[1]);
+                            if (msg.length > 2)
+                                entry.add(msg[2]);
                             data.add(entry);
                         }
                         objOut.writeObject(new Packet("roomHistory", null, data));

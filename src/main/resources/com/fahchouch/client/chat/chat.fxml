@@ -8,7 +8,7 @@
             fx:controller="com.fahchouch.client.controllers.chat.ChatPageController"
             prefWidth="600" prefHeight="800"
             style="-fx-background-color: #1e1e2f;">
-    
+
     <top>
         <VBox spacing="5" style="-fx-padding: 20; -fx-background-color: #2e2e4a;">
             <Label fx:id="chatTitleLabel" text="Chat"
@@ -17,19 +17,21 @@
                    style="-fx-text-fill: #43a047; -fx-font-size: 14;" />
         </VBox>
     </top>
-    
+
     <center>
         <VBox spacing="10" style="-fx-padding: 15;">
-            
+
             <ScrollPane fx:id="scrollPane" fitToWidth="true" VBox.vgrow="ALWAYS"
                         style="-fx-background: transparent; -fx-background-color: transparent;">
                 <VBox fx:id="messagesBox" spacing="8" style="-fx-padding: 5;" />
             </ScrollPane>
-            
+
             <HBox spacing="10">
                 <TextField fx:id="messageField" promptText="Écrire un message..."
                            HBox.hgrow="ALWAYS"
                            style="-fx-background-color: #2e2e4a; -fx-text-fill: white; -fx-background-radius: 20; -fx-padding: 10;" />
+                <Button fx:id="fileButton" text="Clip" onAction="#openFileChooser"
+                        style="-fx-background-color: #5c6bc0; -fx-text-fill: white; -fx-background-radius: 20; -fx-padding: 10;" />
                 <Button fx:id="sendButton" text="Envoyer"
                         style="-fx-background-color: #5c6bc0; -fx-text-fill: white; -fx-background-radius: 20; -fx-padding: 10 20;" />
             </HBox>

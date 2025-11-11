@@ -71,11 +71,6 @@ public class Server {
         return null;
     }
 
-    public ArrayList<String[]> getRoomHistory(String roomName) {
-        Room room = findRoomByName(roomName);
-        return room != null ? room.getMessageHistory() : new ArrayList<>();
-    }
-
     private void sendToClient(ClientServer client, Packet packet) {
         if (client == null)
             return;
@@ -85,6 +80,11 @@ public class Server {
         } catch (Exception e) {
             System.out.println("Failed to send to " + client.getUsername());
         }
+    }
+
+    public ArrayList<String[]> getRoomHistory(String roomName) {
+        Room room = findRoomByName(roomName);
+        return room != null ? room.getMessageHistory() : new ArrayList<>();
     }
 
     public synchronized int getNextId() {

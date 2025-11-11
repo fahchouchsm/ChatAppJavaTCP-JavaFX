@@ -46,6 +46,7 @@ public class LoginPageController {
                 client.setUsername(username);
                 client.startListening();
                 client.setOnMessageReceived(ChatWindowManager::handleIncomingMessage);
+                client.setOnFileReceived(ChatWindowManager::handleFile);
 
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/fahchouch/client/main/main.fxml"));
                 Parent root = loader.load();
