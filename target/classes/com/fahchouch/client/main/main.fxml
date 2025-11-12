@@ -8,43 +8,39 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="500.0" prefWidth="700.0"
-            style="-fx-background-color: #1e1e2f;"
-            xmlns="http://javafx.com/javafx/25"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.fahchouch.client.controllers.main.MainPageController">
+<BorderPane prefHeight="500.0" prefWidth="700.0" style="-fx-background-color: #1e1e2f;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.fahchouch.client.controllers.main.MainPageController">
     
     <top>
         <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-padding: 15;">
-            <Label fx:id="usernameLabel" text="Username" style="-fx-text-fill: white; -fx-font-size: 20; -fx-font-weight: bold;" />
-            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="usernameLabel" style="-fx-text-fill: white; -fx-font-size: 20; -fx-font-weight: bold;" text="Username" />
+            <Region HBox.hgrow="ALWAYS" />
         </HBox>
     </top>
     
     <center>
         <HBox spacing="20" style="-fx-padding: 15;">
             <VBox spacing="10" style="-fx-background-color: #2e2e4a; -fx-padding: 10; -fx-background-radius: 10;" HBox.hgrow="ALWAYS">
-                <Label text="Vos Salons" style="-fx-text-fill: white; -fx-font-size: 16; -fx-font-weight: bold;" />
-                <ListView fx:id="roomsListView" style="-fx-background-radius: 8; -fx-font-size: 14;" VBox.vgrow="ALWAYS"/>
-                <Button fx:id="publicRoomButton" text="Rejoindre le salon public" style="-fx-background-color: #43a047; -fx-text-fill: white; -fx-background-radius: 8;" />
-            </VBox>
+                <Label style="-fx-text-fill: white; -fx-font-size: 16; -fx-font-weight: bold;" text="Vos Salons" />
+                <ListView fx:id="roomsListView" style="-fx-background-radius: 8; -fx-font-size: 14;" VBox.vgrow="ALWAYS" />
+                <Button fx:id="publicRoomButton" style="-fx-background-color: #43a047; -fx-text-fill: white; -fx-background-radius: 8;" text="Rejoindre le salon public" />
+    </VBox>
             
             <VBox spacing="10" style="-fx-background-color: #2e2e4a; -fx-padding: 10; -fx-background-radius: 10;" HBox.hgrow="ALWAYS">
-                <Label text="Chercher un utilisateur" style="-fx-text-fill: white; -fx-font-size: 16; -fx-font-weight: bold;" />
+                <Label style="-fx-text-fill: white; -fx-font-size: 16; -fx-font-weight: bold;" text="Chercher un utilisateur" />
                 <HBox spacing="10">
-                    <TextField fx:id="searchField" promptText="Rechercher..." style="-fx-background-radius: 8; -fx-padding: 6; -fx-font-size: 14;" HBox.hgrow="ALWAYS"/>
-                    <Button fx:id="searchButton" text="Chercher" style="-fx-background-color: #5c6bc0; -fx-text-fill: white; -fx-background-radius: 8;" />
+                    <TextField fx:id="searchField" promptText="Rechercher..." style="-fx-background-radius: 8; -fx-padding: 6; -fx-font-size: 14;" HBox.hgrow="ALWAYS" />
+                    <Button fx:id="searchButton" style="-fx-background-color: #5c6bc0; -fx-text-fill: white; -fx-background-radius: 8;" text="Chercher" />
                 </HBox>
-                <ListView fx:id="usersListView" style="-fx-background-radius: 8; -fx-font-size: 14;" VBox.vgrow="ALWAYS"/>
+                <ListView fx:id="usersListView" style="-fx-background-radius: 8; -fx-font-size: 14;" VBox.vgrow="ALWAYS" />
             </VBox>
         </HBox>
     </center>
     
     <bottom>
-        <HBox alignment="CENTER_RIGHT" style="-fx-padding: 10;">
-            <Button fx:id="logoutButton" text="Logout" style="-fx-background-color: #e53935; -fx-text-fill: white; -fx-background-radius: 8;" />
+        <HBox alignment="CENTER_RIGHT" style="-fx-padding: 10;" >
+         <Button mnemonicParsing="false" text="Button"   />
+            <Button fx:id="logoutButton" style="-fx-background-color: #e53935; -fx-text-fill: white; -fx-background-radius: 8;" text="Logout" />
         </HBox>
     </bottom>
 

@@ -6,17 +6,21 @@ import com.fahchouch.shared.Packet;
 import java.util.ArrayList;
 
 public class Room {
-  private static int nextRoomId = 1000;
-  private final int roomId;
+  private static int nextRoomId = 1;
+  private final String name;
   private final ArrayList<ClientServer> participants = new ArrayList<>();
-  private final ArrayList<String[]> messageHistory = new ArrayList<>(); // [sender, msg]
+  private final ArrayList<String[]> messageHistory = new ArrayList<>();
 
   public Room() {
-    this.roomId = getNextRoomId();
+    this.name = String.valueOf(nextRoomId++);
   }
 
-  private static synchronized int getNextRoomId() {
-    return nextRoomId++;
+  public Room(String name) {
+    this.name = name;
+  }
+
+  public String getName() {
+    return name;
   }
 
   public void addParticipant(ClientServer client) {
@@ -29,12 +33,7 @@ public class Room {
     return new ArrayList<>(participants);
   }
 
-  public String getName() {
-    return String.valueOf(roomId);
-  }
-
   public void broadcastMessage(String sender, String message) {
-    // Save to history
     messageHistory.add(new String[] { sender, message });
 
     ArrayList<String> data = new ArrayList<>();
@@ -50,10 +49,6 @@ public class Room {
         e.printStackTrace();
       }
     }
-  }
-
-  public ArrayList<String[]> getMessageHistory() {
-    return new ArrayList<>(messageHistory);
   }
 
   public void broadcastFile(String sender, String payload) {
@@ -72,5 +67,9 @@ public class Room {
         e.printStackTrace();
       }
     }
+  }
+
+  public ArrayList<String[]> getMessageHistory() {
+    return new ArrayList<>(messageHistory);
   }
 }

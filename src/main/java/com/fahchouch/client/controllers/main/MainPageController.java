@@ -156,25 +156,23 @@ public class MainPageController {
         });
     }
 
-    private void openRoomChat(String displayText) {
+    private void openRoomChat(String roomName) {
         try {
-            String roomId = displayText.split(" ")[0];
-
             FXMLLoader loader = new FXMLLoader(
                     ClientRunner.class.getResource("/com/fahchouch/client/chat/chat.fxml"));
             Parent root = loader.load();
             ChatPageController ctrl = loader.getController();
 
-            ctrl.setRoom(roomId);
-            ctrl.initializeUI("Salon: " + displayText);
+            ctrl.setRoom(roomName);
+            ctrl.initializeUI("Salon: " + roomName);
             ctrl.setClient(client);
 
             Stage stage = new Stage();
-            stage.setTitle("Salon: " + displayText);
+            stage.setTitle("Salon: " + roomName);
             stage.setScene(new Scene(root));
             stage.show();
 
-            ctrl.getClient().requestHistory(roomId);
+            ctrl.getClient().requestHistory(roomName);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -182,7 +180,13 @@ public class MainPageController {
     }
 
     private void joinPublicRoom() {
-        openRoomChat("Public");
+        client.joinRoom("Public");
+        client.setOnRoomJoined(roomId -> {
+            Platform.runLater(() -> {
+                loadUserRooms();
+                openRoomChat("Public");
+            });
+        });
     }
 
     private void logout() {

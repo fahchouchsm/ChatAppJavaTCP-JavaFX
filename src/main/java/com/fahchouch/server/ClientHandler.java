@@ -108,6 +108,10 @@ public class ClientHandler extends Thread {
                             room.broadcastFile(sender, payload);
                         }
                     }
+                    case "joinRoom" -> {
+                        String roomName = (String) packet.getContent();
+                        server.joinRoom(client, roomName);
+                    }
                 }
             }
         } catch (Exception e) {

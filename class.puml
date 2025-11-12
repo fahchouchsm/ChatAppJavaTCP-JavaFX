@@ -1,6 +1,6 @@
 @startuml classdiagram
 
-package "com.fahchouch.client" {
+package "com.client" {
   class Client {
     -Socket socket
     -ObjectOutputStream objOut
@@ -48,34 +48,34 @@ package "com.fahchouch.client" {
   }
 }
 
-package "com.fahchouch.server" {
-  class Server {
-    -int port
-    -ArrayList<ClientServer> clients
-    -ArrayList<Room> rooms
-    +runServer()
-    +addClient(ClientServer)
-    +findClientByUsername(String): ClientServer
-    +getOrCreatePrivateRoom(ClientServer, ClientServer): Room
-    +findRoomByName(String): Room
-  }
+' package "com.server" {
+'   class Server {
+'     -int port
+'     -ArrayList<ClientServer> clients
+'     -ArrayList<Room> rooms
+'     +runServer()
+'     +addClient(ClientServer)
+'     +findClientByUsername(String): ClientServer
+'     +getOrCreatePrivateRoom(ClientServer, ClientServer): Room
+'     +findRoomByName(String): Room
+'   }
   
-  class ClientHandler {
-    -Socket socket
-    -ObjectInputStream objIn
-    -ObjectOutputStream objOut
-    -ClientServer client
-    +run()
-  }
+'   class ClientHandler {
+'     -Socket socket
+'     -ObjectInputStream objIn
+'     -ObjectOutputStream objOut
+'     -ClientServer client
+'     +run()
+'   }
   
-  class ClientServer {
-    -Socket socket
-    -ObjectOutputStream objOut
-    +getOutputStream(): ObjectOutputStream
-  }
-}
+'   class ClientServer {
+'     -Socket socket
+'     -ObjectOutputStream objOut
+'     +getOutputStream(): ObjectOutputStream
+'   }
+' }
 
-package "com.fahchouch.shared" {
+package "com.shared" {
   class Packet {
     -String name
     -Object content
@@ -93,7 +93,7 @@ package "com.fahchouch.shared" {
   }
 }
 
-package "com.fahchouch.shared.chat" {
+package "com.chat" {
   class Room {
     {static} -int nextRoomId
     -int roomId
@@ -122,14 +122,15 @@ ChatPageController --> Client : uses
 ChatPageController --> Packet : handles
 ChatWindowManager --> ChatPageController : manages
 ChatWindowManager --> Packet : routes
-ClientHandler --> Server : belongs to
-ClientHandler --> ClientServer : creates
-ClientHandler --> Packet : reads/writes
-ClientServer ..|> SimpleClient
-Server --> ClientServer : contains
-Server --> Room : contains
-Room --> ClientServer : has participants
+' ClientHandler --> Server : belongs to
+' ClientHandler --> ClientServer : creates
+' ClientHandler --> Packet : reads/writes
+' ClientServer ..|> SimpleClient
+Client ..|> SimpleClient
+' Server --> ClientServer : contains
+' Server --> Room : contains
+' Room --> ClientServer : has participants
 Room --> Packet : broadcasts
-Client --> ChatPageController : registers via ChatWindowManager
+Client -->  ChatPageController : registers via ChatWindowManager
 
 @enduml

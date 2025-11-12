@@ -12,15 +12,62 @@ public class Server {
     private final int port;
     private final ArrayList<ClientServer> clients = new ArrayList<>();
     private final ArrayList<ClientHandler> handlers = new ArrayList<>();
-    private final ArrayList<Room> rooms = new ArrayList<>();
     private int idCounter = 0;
-
-    public static void main(String[] args) {
-        new Server(3001).runServer();
-    }
+    private final ArrayList<Room> rooms = new ArrayList<>();
+    private Room publicRoom = null;
 
     public Server(int port) {
         this.port = port;
+        publicRoom = new Room("Public");
+        rooms.add(publicRoom);
+    }
+
+    public Room getPublicRoom() {
+        return publicRoom;
+    }
+
+    public void joinRoom(ClientServer client, String roomName) {
+        Room room = findRoomByName(roomName);
+        if (room != null && !room.getParticipants().contains(client)) {
+            room.addParticipant(client);
+            notifyRoomJoined(client, roomName);
+        }
+    }
+
+    private void notifyRoomJoined(ClientServer client, String roomName) {
+        Packet packet = new Packet("roomJoined", roomName);
+        try {
+            client.getOutputStream().writeObject(packet);
+            client.getOutputStream().flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public ArrayList<Object> getUserRoomsByUsername(String username) {
+        ArrayList<Object> result = new ArrayList<>();
+        synchronized (rooms) {
+            for (Room room : rooms) {
+                boolean inRoom = false;
+                ArrayList<String> names = new ArrayList<>();
+                for (ClientServer p : room.getParticipants()) {
+                    if (username.equals(p.getUsername()))
+                        inRoom = true;
+                    names.add(p.getUsername());
+                }
+                if (inRoom) {
+                    ArrayList<Object> entry = new ArrayList<>();
+                    entry.add(room.getName());
+                    entry.add(names);
+                    result.add(entry);
+                }
+            }
+        }
+        return result;
+    }
+
+    public static void main(String[] args) {
+        new Server(3001).runServer();
     }
 
     public void runServer() {
@@ -113,28 +160,6 @@ public class Server {
                 String username = c.getUsername();
                 if (username != null && username.toLowerCase().contains(lowerQuery)) {
                     result.add(new SimpleClient(username, c.getId()));
-                }
-            }
-        }
-        return result;
-    }
-
-    public ArrayList<Object> getUserRoomsByUsername(String username) {
-        ArrayList<Object> result = new ArrayList<>();
-        synchronized (rooms) {
-            for (Room room : rooms) {
-                boolean inRoom = false;
-                ArrayList<String> names = new ArrayList<>();
-                for (ClientServer p : room.getParticipants()) {
-                    if (username.equals(p.getUsername()))
-                        inRoom = true;
-                    names.add(p.getUsername());
-                }
-                if (inRoom) {
-                    ArrayList<Object> entry = new ArrayList<>();
-                    entry.add(room.getName());
-                    entry.add(names);
-                    result.add(entry);
                 }
             }
         }

@@ -22,8 +22,16 @@ public class Client {
     private Consumer<Packet> onMessageReceived;
     private Consumer<ArrayList<SimpleClient>> onSearchResult;
     private Consumer<ArrayList<Object>> onGetUserRoomsResult;
-
     private Consumer<Packet> onFileReceived;
+    private Consumer<String> onRoomJoined;
+
+    public void joinRoom(String roomName) {
+        sendObject(new Packet("joinRoom", roomName));
+    }
+
+    public void setOnRoomJoined(Consumer<String> callback) {
+        this.onRoomJoined = callback;
+    }
 
     public void setOnFileReceived(Consumer<Packet> callback) {
         this.onFileReceived = callback;
@@ -109,6 +117,12 @@ public class Client {
                         case "file" -> {
                             if (onFileReceived != null) {
                                 Platform.runLater(() -> onFileReceived.accept(packet));
+                            }
+                        }
+                        case "roomJoined" -> {
+                            String roomId = (String) packet.getContent();
+                            if (onRoomJoined != null) {
+                                Platform.runLater(() -> onRoomJoined.accept(roomId));
                             }
                         }
                     }
